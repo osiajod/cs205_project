@@ -135,3 +135,7 @@ data/
 # data
 *.csv.gz
 *.zip
+
+
+# vim crap
+*.swp

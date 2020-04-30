@@ -131,3 +131,7 @@ dmypy.json
 .DS_Store
 # for Project Gutenberg
 data/
+
+# data
+*.csv.gz
+*.zip

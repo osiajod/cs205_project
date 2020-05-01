@@ -24,31 +24,6 @@ PG_FOOTER = [
 ]
 
 
-def remove_header_footer_old(pgid, data):
-    new_data = []
-    past_header = False
-    past_footer = False
-    try:
-        split_data = data.decode('utf-8').split('\n')
-    except UnicodeDecodeError:
-        print(f"{pgid} did not have utf 8 encoding")
-        split_data = data.decode('cp1252').split('\n')
-
-    for line in split_data:
-        if past_header and not past_footer:
-            for pg_footer in PG_FOOTER:
-                 if pg_footer in line.lower():
-                    past_footer = True 
-            if not past_footer: 
-                new_data.append(line)
-        else:
-            for pg_header in PG_HEADER:
-                if pg_header in line.lower():
-                    past_header = True
-                    
-                 
-    return ('\n'.join(new_data)).strip().encode('utf-8')
-
 
 skip_lines = [
      'distributed proofreader',
@@ -59,15 +34,25 @@ skip_lines = [
      'proofreaders',
      "transcriber's",
      'copyright',
-     "the internet archive",
-     "illustration"
+     "illustration",
+     "internet archive"
 ]
 
 def remove_header_footer(pgid, data):
     try:
         string = data.decode('utf-8')
     except UnicodeDecodeError:
+        pass
+
+    try:
         string = data.decode('cp1252')
+    except UnicodeDecodeError:
+        pass
+
+    try:
+        string = data.decode('latin-1')
+    except UnicodeDecodeError:
+        pass
 
     #cleaned_string = simple_cleaner(string) 
     cleaned_string_lines = super_cleaner(string).strip().split('\n')

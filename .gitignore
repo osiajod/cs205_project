@@ -139,3 +139,5 @@ data/
 
 # vim crap
 *.swp
+
+.idea/

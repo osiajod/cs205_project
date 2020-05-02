@@ -146,3 +146,5 @@ src/models/124M/model.ckpt.data-00000-of-00001
 *.swp
 
 .idea/
+
+model.ckpt.data*

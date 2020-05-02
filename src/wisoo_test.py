@@ -18,11 +18,27 @@ gpt2 = GPT2(config, name='gpt2')
 
 # print(type(config))
 
-# gpt2= build(config, "./models/124M/checkpoint", name='gpt2')
-print(type(gpt2))
-print(gpt2.layers[1].layers)
+# gpt2= build(config, "./models/124M/model.ckpt.data-00000-of-00001", name='gpt2')
+gpt2= build(config, "./models/124M/model.ckpt", name='gpt2')
 
-# print(gpt2.summary())
+print(type(gpt2))
+# print(gpt2.layers[1].layers) # The Transformer
+
+
+print(gpt2.layers[0])  # The Embedding Layer
+
+
+
+# gpt2.compile(
+#     optimizer=tf2.optimizers.RMSprop(lr=0.01),
+#     loss = tf2.keras.losses.MeanSquaredError(),
+#     metrics = ['accuracy']
+# )
+
+
+print(gpt2.summary())
+print("printing Transformer summary")
+print(gpt2.layers[1].summary())
 # print(gpt2.summary())
 
 # with tf.Session() as sess:

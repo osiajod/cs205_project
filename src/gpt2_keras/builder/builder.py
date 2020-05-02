@@ -1,5 +1,5 @@
-# import tensorflow as tf
-import tensorflow.compat.v1 as tf
+import tensorflow as tf
+# import tensorflow.compat.v1 as tf
 import numpy as np
 from . import gpt2
 from . import original_gpt2
@@ -126,19 +126,19 @@ def build(config, checkpoint_path, session=None, name=None):
     """
     if name is None:
         name = "gpt2"
-    conf = tf.ConfigProto(device_count={'GPU': 0})
-    with open(config) as f:
-        config = json.load(f)
+    conf = tf.compat.v1.ConfigProto(device_count={'GPU': 0})
+    # with open(config) as f:
+    #     config = json.load(f)
     graph = tf.Graph()
     with graph.as_default():
         x = tf.ones(shape=(1, 1), dtype=tf.int32)
         hparams = original_gpt2.default_hparams()
         hparams.override_from_dict(config)
         _ = original_gpt2.model(hparams, x)
-        original_weights = tf.global_variables()
+        original_weights = tf.compat.v1.global_variables()
         original_weights = ReArrange.GPT2(original_weights)
-        saver = tf.train.Saver()
-        sess = tf.Session(config=conf, graph=graph)
+        saver = tf.compat.v1.train.Saver()
+        sess = tf.compat.v1.Session(config=conf, graph=graph)
         saver.restore(sess=sess, save_path=checkpoint_path)
     original_weights = sess.run(original_weights)
     sess.close()

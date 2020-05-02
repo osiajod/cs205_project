@@ -131,7 +131,7 @@ dmypy.json
 .DS_Store
 # for Project Gutenberg
 data/*
-!MyFolder/target_texts/*
+!data/target_texts/*
 
 # data
 *.csv.gz

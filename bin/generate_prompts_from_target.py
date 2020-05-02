@@ -70,7 +70,6 @@ def prompts_generator(infile, window_size=3, step_size=1):
 
         yield prompt
 
-        #yield prompt
 
 
 def sep_sentences_to_lines(infile, outfile, sep_paragraphs=True):

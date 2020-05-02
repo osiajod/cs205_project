@@ -3,9 +3,7 @@ import gpt_2_simple as gpt2
 import re
 import itertools
 
-import gpt_2_simple as gpt2
 import nltk
-import re
 
 
 

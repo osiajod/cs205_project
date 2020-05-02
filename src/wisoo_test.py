@@ -24,9 +24,14 @@ gpt2= build(config, "./models/124M/model.ckpt", name='gpt2')
 print(type(gpt2))
 # print(gpt2.layers[1].layers) # The Transformer
 
+embedding_layer = gpt2.layers[0]
 
-print(gpt2.layers[0])  # The Embedding Layer
 
+print(embedding_layer)  # The Embedding Layer
+
+
+print("printing vocab size:",  embedding_layer.vocab_size) #50257
+print("printing word embedding:",  embedding_layer.word_embedding) #(50257 , 768)=
 
 
 # gpt2.compile(
@@ -39,7 +44,18 @@ print(gpt2.layers[0])  # The Embedding Layer
 print(gpt2.summary())
 print("printing Transformer summary")
 print(gpt2.layers[1].summary())
+
 # print(gpt2.summary())
+batch_size =1
+max_seq_length = 1024
+word_embedding = 768
+tf.keras.backend.set_floatx('float64')
+# input1 = np.random.randint(embedding_layer.vocab_size, size=(batch_size, 5, embedding_layer.word_embedding[-1]))
+input1 = np.random.randint(embedding_layer.vocab_size, size=(batch_size,max_seq_length))
+# print(input1)
+output = gpt2(input1)
+
+print(output)
 
 # with tf.Session() as sess:
 #     print(sess.run(y, feed_dict={x:[None,None]}))

@@ -461,7 +461,7 @@ class Embedding(tf.keras.layers.Layer):
         self.max_position_length = max_position_length
 
     def build(self, input_shape):
-        self.word_embedding = self.add_weight(
+        self.word_embedding = self.add_weight(  ## This is called during the initialization with config.json
             name="word_embedding",
             shape=(self.vocab_size, self.embedding_size),
             initializer=tf.random_normal_initializer(stddev=self.initializer_range),

@@ -480,7 +480,7 @@ class Embedding(tf.keras.layers.Layer):
 
         """
         shape = get_tensor_shape(inputs)
-        x = tf.gather(self.word_embedding, inputs)
+        x = tf.gather(self.word_embedding, inputs) # tf.gather: Gather slices from params axis axis according to indices.
         if start is None:
             start = 0
         end = start + shape[1]

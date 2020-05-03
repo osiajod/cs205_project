@@ -423,6 +423,9 @@ class Transformer(tf.keras.Model):
 
     def __call__(self, inputs, cache=None, dropout=None, attention_dropout=None,
                  return_cache=False, blocks=None, use_2d=False, shape=None):
+        # In keras, __call()__ calls call() as well as some inner operations,
+        # so when we reload call() inheriting from tf.keras.Model or .Layer, we can call our customer code while keeping tf.keras's innerstructure.
+        # An important part of such inner operations include Keras's automatic conversion of numpy array ==> Tensor array.
         """
 
         inputs: a tensor of shape [batch_size, seq_length, dim], if use_2d is False, else [batch_size * seq_length, dim]

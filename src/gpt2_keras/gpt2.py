@@ -392,7 +392,7 @@ class Transformer(tf.keras.Model):
             outputs = {}
         if return_cache:
             new_cache = []
-        output = inputs
+        output = inputs # This is just for the sake of input & output dimension coordination, it seems
         for ids in range(max_block + 1):
             if cache is None:
                 _cache = None
@@ -552,6 +552,7 @@ class GPT2(tf.keras.Model):
             x, cache = x
         if return_logits:
             shape = get_tensor_shape(x)
+            print("shape of the intermediate tensor x is : ", shape)
             if not use_2d:
                 x = tf.reshape(x, [shape[0] * shape[1], shape[2]])
             logits = tf.matmul(x, self.embedding.word_embedding, transpose_b=True)

@@ -22,6 +22,9 @@
     <!-- Custom styles for this template -->
     <link href="./css/theme.css" rel="stylesheet">
 
+    <!-- IACS stylesheet -->
+    <link rel="stylesheet" href="./style/css/iacs.css" />
+
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
@@ -79,23 +82,17 @@
       <div class="page-header">
         <h2>1. Description of problem and the need for HPC and/or Big Data</h2>
       </div>
-      <p> Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-      tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-      quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-      consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-      cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-      proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+      <p> In our project, we will be exploring the problem of Textual Style Transfer with GPT-2. Two facets of any written work are style and content. <em>Content</em> pertains to the events or ideas being described whilst <em>Style</em> pertains to the manner in which the events or ideas are being described. Different authors and/or mediums have different styles. Textual style transfer aims to modify the style of one work to mimic the style of another while keeping the content relevant to the original. We will be using the GPT-2 model developed by OpenAI to perform textual style transfer on diverse and large datasets. </p>
+
+      <p> There is a need for both big compute and big data processing in our project. On the <b>Big Compute</b> front, we will need a lot of compute resources to train the GPT-2 model for textural style transfer. GPT-2 comes in various sizes and all have a significant number of parameters to train. The "small" model that we are working with has 117 million parameters to train and our rough time estimate shows that we require 6 hours on single GPU to get reasonable (conditional) initial results using 7MB of text and 33k iterations. HPC will allow us to speed this up. </p>
+
+      <p>On the <b>Big Data</b> front, the original GPT-2 model is originally trained with 40GB of internet text. This includes WikiText, which contains 100 million tokens from  verified “good” and “featured” Wikipedia articles as well as Treebank-2 which contains 1 million tokens from WSJ articles. The large sizes of the datasets that we are dealing with implies a clear for Big Data processing for us to handle these cases.</p> 
 
       <a class="anchor" id="2"></a>
       <div class="page-header">
         <h2>2. Description of solution and comparison with existing work on the problem</h2>
       </div>
-      <p> Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-      tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-      quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-      consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-      cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-      proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+      <p> In scoping the existing work on this problem, we refer to the paper and associated codebase written by OpenAI linked <a href = https://openai.com/blog/better-language-models/>here</a>. OpenAI provides the GPT-2 model architecture that they tested for Textual Style Transfer. However, they do not provide the trained parameters for this problem. As such, our solution involves training this model to do textual style transfer. Moreover in comparison with the original solution, our solution will also train the parameters in parallel which we will further elaborate below. </p>
 
       <a class="anchor" id="3"></a>
       <div class="page-header">

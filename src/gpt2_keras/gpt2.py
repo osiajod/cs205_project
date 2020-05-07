@@ -313,7 +313,7 @@ class Block(tf.keras.layers.Layer):
                                         name="mlp")
 
     def call(self, inputs, cache=None, dropout=None, attention_dropout=None,
-            return_cache=False, use_2d=False, shape=None):
+            return_cache=False, use_2d=False, shape=None, parallelize=False):
         x = inputs
         a = self.attention(inputs=x,
                            cache=cache,
@@ -322,16 +322,40 @@ class Block(tf.keras.layers.Layer):
                            return_cache=return_cache,
                            use_2d=use_2d,
                            shape=shape)
-        if return_cache:
-            a, cache = a
-        x = x + a
-        m = self.mlp(inputs=x,
-                     dropout=dropout)
-        x = x + m
-        if return_cache:
-            return x, cache
+
+        if not parallelize:
+            if return_cache:
+                a, cache = a
+            x = x + a
+            m = self.mlp(inputs=x,
+                         dropout=dropout)
+            x = x + m
+            if return_cache:
+                return x, cache
+            else:
+                return x
+
         else:
-            return x
+            #analyze the shape of x  (Which part corresponds to z1, z2 .... zn?)
+            print("printing outputs of attention layer")
+            print(a)
+            print("printing a.shape")
+            print(a.shape)
+            print("printing x")
+            print(x)
+            print("printing x.shape")
+            print(x.shape)
+            #divide up x
+            #copy self.mlp and distribute to the # of cpus or gpus available
+            #gather the outputs mlp(z1), mlp(z2), mlp(z3), mlp(zn) to a single matrix mlp(Z) and store it to variable m
+
+            # x = x + m
+
+            # return x
+
+
+
+
 
     def __call__(self, inputs, cache=None, dropout=None, attention_dropout=None,
                  return_cache=False, use_2d=False, shape=None):
@@ -358,7 +382,7 @@ class Transformer(tf.keras.Model):
         self.layer_norm = LayerNormalization(name="layer_norm")
 
     def call(self, inputs, cache=None, dropout=None, attention_dropout=None,
-             return_cache=False, blocks=None, use_2d=False, shape=None):
+             return_cache=False, blocks=None, use_2d=False, shape=None, parallelize=False):
         """
 
         inputs: a tensor of shape [batch_size, seq_length, dim], if use_2d is False, else [batch_size * seq_length, dim]
@@ -398,19 +422,33 @@ class Transformer(tf.keras.Model):
                 _cache = None
             else:
                 _cache = cache[ids]
-            output = self.blocks[ids](inputs=output,
-                                      cache=_cache,
-                                      dropout=dropout,
-                                      attention_dropout=attention_dropout,
-                                      return_cache=return_cache,
-                                      use_2d=use_2d,
-                                      shape=shape)
+            if not parallelize:
+                output = self.blocks[ids](inputs=output,
+                                          cache=_cache,
+                                          dropout=dropout,
+                                          attention_dropout=attention_dropout,
+                                          return_cache=return_cache,
+                                          use_2d=use_2d,
+                                          shape=shape)
+
+            else: # Model parallelism ("intra-node parallelism")
+                output = self.blocks[ids](inputs=output,
+                                          cache=_cache,
+                                          dropout=dropout,
+                                          attention_dropout=attention_dropout,
+                                          return_cache=return_cache,
+                                          use_2d=use_2d,
+                                          shape=shape,
+                                          parallelize=True
+                                          )
+
             if return_cache:
                 output, _cache = output
                 new_cache.append(_cache)
             if blocks is not None:
                 if ids in blocks:
                     outputs[ids] = output
+
         if blocks is None:
             output = self.layer_norm(output)
             result = output
@@ -422,7 +460,7 @@ class Transformer(tf.keras.Model):
             return result
 
     def __call__(self, inputs, cache=None, dropout=None, attention_dropout=None,
-                 return_cache=False, blocks=None, use_2d=False, shape=None):
+                 return_cache=False, blocks=None, use_2d=False, shape=None, parallelize=False):
         # In keras, __call()__ calls call() as well as some inner operations,
         # so when we reload call() inheriting from tf.keras.Model or .Layer, we can call our customer code while keeping tf.keras's innerstructure.
         # An important part of such inner operations include Keras's automatic conversion of numpy array ==> Tensor array.
@@ -444,7 +482,8 @@ class Transformer(tf.keras.Model):
             return_cache=return_cache,
             blocks=blocks,
             use_2d=use_2d,
-            shape=shape
+            shape=shape,
+            parallelize=parallelize
         )
 
 
@@ -518,7 +557,7 @@ class GPT2(tf.keras.Model):
 
     def call(self, inputs, cache=None,
              dropout=None, attention_dropout=None,
-             return_cache=False, return_logits=True, use_2d=False):
+             return_cache=False, return_logits=True, use_2d=False, paralellize=False):
         """
 
         inputs: an integer tensor of shape [batch_size, seq_length] if not use_2d is False
@@ -549,7 +588,8 @@ class GPT2(tf.keras.Model):
             attention_dropout=attention_dropout,
             return_cache=return_cache,
             use_2d=use_2d,
-            shape=shape
+            shape=shape,
+            paralellize=paralellize
         )
         if return_cache:
             x, cache = x
@@ -572,7 +612,9 @@ class GPT2(tf.keras.Model):
     def __call__(self, inputs, cache=None,
                  dropout=None, attention_dropout=None,
                  return_cache=False, return_logits=True,
-                 use_2d=False):
+                 use_2d=False,
+                 parallelize=False
+                 ):
         """
 
         inputs: an integer tensor of shape [batch_size, seq_length]
@@ -590,6 +632,7 @@ class GPT2(tf.keras.Model):
             attention_dropout=attention_dropout,
             return_cache=return_cache,
             return_logits=return_logits,
-            use_2d=use_2d
+            use_2d=use_2d,
+            parallelize=parallelize
         )
 

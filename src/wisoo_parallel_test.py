@@ -19,6 +19,10 @@ size = comm.Get_size()
 batch_size = 1
 word_embedding = 768
 max_seq_length = 500
+num_decoder = 12
+
+DECODER_TAG = 1000
+ZSLICE_TAG = 10000
 # !!!!!!!!! UNCOMMENT BELOW WHEN RUNNING ON AWS
 # assert size >= 12  # Let us program for the case where each core can get one MLP layer each
 
@@ -64,37 +68,90 @@ if rank == 0: # If this is the master, start building the GPT2 model
 
 
     # For simplicity, let's train for the case where 1 line = 1 instance of a batch
-
+    partition_size = len(corpus) // 3
+    corpuss = [
+        corpus[:partition_size,:,:],
+        corpus[partition_size: partition_size*2, :, :],
+        corpus[partition_size*2:, :, :]
+    ]
     epochs = 10
 
     for ith_epoch in range(epochs):
-        embedded = embedding_layer(corpus)
-        A1 = ATTNs[0](embedded)
-        # print(A1.shape) # (104, 500, 768)  == (batch, max_seq, embed_size)
-        #Evenly Send out partintioned Z matrix to ALL THE WORKERS. That is, each worker gets max_seq(=500) / size
-        Z1 = embedded + A1
-        # print(Z1.shape) # (104, 500, 768)  == (batch, max_seq, embed_size)
+        for corp in corpuss:
+            embedded = embedding_layer(corp)
+            for i in range(num_decoder): #
+                if i ==0:
+                    A1 = ATTNs[i](embedded)
+                    # print(A1.shape) # (104, 500, 768)  == (batch, max_seq, embed_size)
+                    #Evenly Send out partintioned Z matrix to ALL THE WORKERS. That is, each worker gets max_seq(=500) / size
+                    Z1 = embedded + A1
+                    # print(Z1.shape) # (104, 500, 768)  == (batch, max_seq, embed_size)
+                    Z1 = MLPs[i].layer_norm(Z1)
+                    for worker_num in range(size):
+                        #point-to-point communication
+                        #Send
+                        if ith_epoch == epochs-1:
+                            continue_forward = False
+                        else:
+                            continue_forward = True
+                        worker_share = max_seq_length // size  # 500 / 12 = 41.666 ==> 41  RESULT : (partition_size, 41, 768)
+                        offset = worker_num*worker_share # 0 ==> 41 ==> 82 ....
+                        print(offset)
+                        if worker_num != size-1:
+                            req_Z1 = comm.isend(Z1[:, offset: offset+worker_share,:],
+                                                dest=worker_num+1,
+                                                tag=worker_num+1 + DECODER_TAG*i + ZSLICE_TAG*worker_num) #
+                            comm.bcast(continue_forward, root=0)
+                            # req_continueForwrad = comm.isend(continue_forward, dest=worker_num+1, tag=worker_num+101)
+                        else:
+                            req_Z1 = comm.isend(Z1[:, offset:, :],
+                                                dest=worker_num+1,
+                                                tag=worker_num+1 + DECODER_TAG*i + ZSLICE_TAG*worker_num) #
+                            comm.bcast(continue_forward, root=0)
+                            # req_continueForwrad = comm.isend(continue_forward, dest=worker_num+1, tag=worker_num+101)
 
-        for worker_num in range(size):
-            #point-to-point communication
-            #Send
-            if ith_epoch == epochs-1:
-                continue_forward = False
-            else:
-                continue_forward = True
-            worker_share = max_seq_length // size  # 500 / 12 = 41.666 ==> 41
-            offset = worker_num*worker_share # 0 ==> 41 ==> 82 ....
-            print(offset)
-            if worker_num != size-1:
-                req_Z1 = comm.isend(Z1[:, offset: offset+worker_share,:], dest=worker_num+1, tag=worker_num+301) # 301 : tag code for Z1 slice
-            else:
-                req_Z1 = comm.isend(Z1[:, offset:, :], dest=worker_num+1, tag=worker_num+301)
+                        req_Z1.wait()
+                else:
+                    A1 = ATTNs[i](embedded)
+                    # print(A1.shape) # (104, 500, 768)  == (batch, max_seq, embed_size)
+                    # Evenly Send out partintioned Z matrix to ALL THE WORKERS. That is, each worker gets max_seq(=500) / size
+                    Z1 = embedded + A1
+                    # print(Z1.shape) # (104, 500, 768)  == (batch, max_seq, embed_size)
+                    Z1 = MLPs[i].layer_norm(Z1)
+                    for worker_num in range(size):
+                        # point-to-point communication
+                        # Send
+                        if ith_epoch == epochs - 1:
+                            continue_forward = False
+                        else:
+                            continue_forward = True
+                        worker_share = max_seq_length // size  # 500 / 12 = 41.666 ==> 41  RESULT : (partition_size, 41, 768)
+                        offset = worker_num * worker_share  # 0 ==> 41 ==> 82 ....
+                        print(offset)
+                        if worker_num != size - 1:
+                            req_Z1 = comm.isend(Z1[:, offset: offset + worker_share, :],
+                                                dest=worker_num + 1,
+                                                tag=worker_num + 1 + DECODER_TAG * i + ZSLICE_TAG * worker_num)  #
+                            comm.bcast(continue_forward, root=0)
+                            # req_continueForwrad = comm.isend(continue_forward, dest=worker_num+1, tag=worker_num+101)
+                        else:
+                            req_Z1 = comm.isend(Z1[:, offset:, :],
+                                                dest=worker_num + 1,
+                                                tag=worker_num + 1 + DECODER_TAG * i + ZSLICE_TAG * worker_num)  #
+                            comm.bcast(continue_forward, root=0)
+                            # req_continueForwrad = comm.isend(continue_forward, dest=worker_num+1, tag=worker_num+101)
 
-        # Continue on with embedding
+                        req_Z1.wait()
+
+
+
+            # Continue on with embedding
+
 
 
 
         # After finishing embedding each batch, test() for processed Z1
+
 
         # Reassemble outputs mlp(z1) mlp
 
@@ -151,14 +208,24 @@ else: # worker cores  / nodes
         recon_MLPs.append(temp)
 
 
-
     while continue_forward:
         # For each MLPs check if isend was called
-        inputs = comm.irecv(source=0, tag=rank+200) # rank + 200 : inputs from this decoder block's
+        req_partitionedZ1 = comm.irecv(source=0, tag=rank+1000) # rank + 1000 : partitioned_Z1 from this decoder block' attention layer + input (x+a)
         # mlp_outputs = mlp.call(inputs)
-        continue_forward = comm.irecv(source=rank - 1,
-                                      tag=rank + 100)  # rank + 100 indicates the Boolean for stopping the forward run
 
-        # remember to tell the next guy about continue_forward
-        comm
-        comm.isend(continue_forward)
+
+        # req_continueForward = comm.irecv(source=rank - 1,
+        #                               tag=rank + 100)  # rank + 100 indicates the Boolean for stopping the forward run
+        #
+
+        # continueForward should be bcast()? ==> Because
+        data_continue = None
+        data_continue = comm.bcast(data_continue, root=0)
+        continue_forward = data_continue
+
+        partitionedZ1 = req_partitionedZ1.wait()
+
+
+
+
+        # Pass the output of MLP(partitioned_Z1) to the next guy to be assembled

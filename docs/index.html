@@ -58,6 +58,7 @@
 
       <!-- Main jumbotron for a primary marketing message or call to action -->
       <div class="jumbotron">
+        <img src="./img/iacs.png" >
         <h1>Textual Style Transfer with GPT-2</h1>
         <p><b>Group 8</b> - Michael <u>Downs</u>, Cameron <u>Hickert</u>, Wen Rui <u>Liau</u>, Wisoo <u>Song</u></p>
       </div>
@@ -82,8 +83,9 @@
       <div class="page-header">
         <h2>1. Description of problem and the need for HPC and/or Big Data</h2>
       </div>
+      <h4> Problem </h4>
       <p> In our project, we will be exploring the problem of Textual Style Transfer with GPT-2. Two facets of any written work are style and content. <em>Content</em> pertains to the events or ideas being described whilst <em>Style</em> pertains to the manner in which the events or ideas are being described. Different authors and/or mediums have different styles. Textual style transfer aims to modify the style of one work to mimic the style of another while keeping the content relevant to the original. We will be using the GPT-2 model developed by OpenAI to perform textual style transfer on diverse and large datasets. </p>
-
+      <h4> Need for HPC and Big Data </h4>
       <p> There is a need for both big compute and big data processing in our project. On the <b>Big Compute</b> front, we will need a lot of compute resources to train the GPT-2 model for textural style transfer. GPT-2 comes in various sizes and all have a significant number of parameters to train. The "small" model that we are working with has 117 million parameters to train and our rough time estimate shows that we require 6 hours on single GPU to get reasonable (conditional) initial results using 7MB of text and 33k iterations. HPC will allow us to speed this up. </p>
 
       <p>On the <b>Big Data</b> front, the original GPT-2 model is originally trained with 40GB of internet text. This includes WikiText, which contains 100 million tokens from  verified “good” and “featured” Wikipedia articles as well as Treebank-2 which contains 1 million tokens from WSJ articles. The large sizes of the datasets that we are dealing with implies a clear for Big Data processing for us to handle these cases.</p> 
@@ -92,14 +94,18 @@
       <div class="page-header">
         <h2>2. Description of solution and comparison with existing work on the problem</h2>
       </div>
-      <p> In scoping the existing work on this problem, we refer to the paper and associated codebase written by OpenAI linked <a href = https://openai.com/blog/better-language-models/>here</a>. OpenAI provides the GPT-2 model architecture that they tested for Textual Style Transfer. However, they do not provide the trained parameters for this problem. As such, our solution involves training this model to do textual style transfer. Moreover in comparison with the original solution, our solution will also train the parameters in parallel which we will further elaborate below. </p>
+      <h4> OpenAI existing work </h4>
+      <p> In scoping the existing work on this problem, we refer to the paper and associated codebase written by OpenAI linked <a href = https://openai.com/blog/better-language-models/>here</a>. OpenAI provides the GPT-2 model architecture that they tested for various different Natural Language Processing (NLP) tasks. In their paper, they outlined their efforts in using the model for zero-shot reading comprehension, summarization, translation and question answering. However, they do not outline the effectiveness of the model on Textual Style Transfer</p>
+      <h4> Our solution </h4>
+      <p> In our project, we will be using the original GPT-2 model to perform textual style transfer from a source text to a target text. Moreover, OpenAI does not provide the trained parameters for the original GPT-2 model. As such, our solution involves training this huge model as well to do textual style transfer. Lastly in comparison with the original GPT-2 model, our solution will also train the parameters in parallel which we will further elaborate in our technical descriptions below. Overall, we find that our project is extremely novel compared to existing work done in the field and contributed to interesting findings which we describe in the sections below. </p>
 
       <a class="anchor" id="3"></a>
       <div class="page-header">
         <h2>3. Description of your model and/or data in detail</h2>
       </div>
-      <p> I will first describe the source data that we used for our textual style transfer application. For our source textual data, we used the zothique stories obtained from <a href = khttp://www.eldritchdark.com/> this link </a> and project gutenberg books obtained using from this <a href = https://github.com/pgcorpus/gutenberg/tree/master/src> repository </a>. The raw project gutenberg corpus is almost 9GB compressed that requires processing. We used the super_cleaner functionality from this <a href = https://github.com/kiasar/gutenberg_cleaner> repository </a> to strip of all of the project gutenberg boilerplate. The pgcorpus repository also generates a metadata file while we used to separate the project gutenberg books into the genres: juvenile, 19th century, science fiction, adventure, fairy tales, and poetry. Of those, we only used the first three.</p>
-
+      <h4> Description of Data </h4>
+      <p> I will first describe the source data that we used for our textual style transfer application. For our source textual data, we used the zothique stories obtained from <a href = khttp://www.eldritchdark.com/> this link </a> and Project Gutenberg books obtained using from this <a href = https://github.com/pgcorpus/gutenberg/tree/master/src> repository </a>. The raw project gutenberg corpus is almost 9GB compressed that requires processing. We used the super_cleaner functionality from this <a href = https://github.com/kiasar/gutenberg_cleaner> repository </a> to strip of all of the project gutenberg boilerplate. The pgcorpus repository also generates a metadata file while we used to separate the project gutenberg books into the genres: juvenile, 19th century, science fiction, adventure, fairy tales, and poetry. Of those, we only used the first three.</p>
+      <h4> Description of Model </h4>
       <p> The core model we used for textual style transfer is GPT-2. GPT-2 is a transformer-based Neural Net for unsupervised Multitask Learning. This model consists of an Encoder as well as a Decoder and the model architecture is seen below. In the original paper by OpenAI, this model is able to perform zero-shot reading comprehension, summarization, translation and question answering to varying degrees of success.</p>
 
       <img src="./img/gpt2.png" class="center-block" width=400px>
@@ -111,19 +117,23 @@
       <div class="page-header">
         <h2>4. Technical description of the parallel application, programming models, platform and infrastructure</h2>
       </div>
+      <h4> Parallel Application </h4>
       <p> Our parallel application involves exploiting a range of different parallelism levels including many-node and many-core parallelism as we used multiple GPUs on multiple nodes. There are two main areas to parallelize: the training phase and the generation phase. </p>
       <p> In the training phase of our project, the transformer computations and gradient updates in GPT-2 fine-tuning will be parallelized. In the generation phase, we will be parallelizing the generation of style-transfered text from a source file. </p>
+      <h4> Programming Model</h4>
       <p> In deciding on the parallel programming model to use, we used the ring all-reduce algorithm via Horovod that utilizes open MPI. Compared to the alternative of distributed tensorflow's worker-parameter server model, Horovod's ring all-reduce algorithm is superior in terms of both speed as well as space due to the absence of the need for a parameter server. An overview of this parallel algorithm is shown below. </p>
 
       <img src="./img/ringallreduce.png" class="center-block" width=1000px>
 
-      <p> Our language of choice will be Python which allows us to access a wide range of different libraries for our project. Our machine learning framework used is Tensorflow and Keras as well as Horovod as mentioned above. Our platform operating system used is Deep Learning Amazon Machine Image (Ubuntu) which came with Tensorflow and Horovod pre-configured. Our infrastructure of choice is Amazon's Elastic Compute 2 as well as Harvard's Cannon supercomputer.Specifically on AWS's EC2 cluster, we used a g4dn.12xlarge instance which contains 4 Nvidia T4 Tensor Core GPUs, 48 vCPUs, and 192Gb of RAM.</p>
+      <h4>Platform and Infrastructure </h4>
+      <p> Our language of choice will be Python which allows us to access a wide range of different libraries for our project. Our machine learning framework used is Tensorflow and Keras as well as Horovod as mentioned above. Our platform operating system used is Deep Learning Amazon Machine Image (Ubuntu) which came with Tensorflow and Horovod pre-configured. Our infrastructure of choice is Amazon's Elastic Compute 2 (EC2). Originally, we planned to use Harvard's FAS Cannon supercomputer as well but had issues with the parallel implementation which we will outline later. For the single-node training on AWS, we used the g4dn.12xlarge EC2 instance. This instance has four GPUs, each with 16GB of memory. For the multimode training, we used four g4dn.xlarge instances, which each have one GPU with 16GB of memory. Since these instances are both members of AWS’ G4 family of instances, the GPUs they use are NVIDIA T4 Tensor Core GPUs. These decisions were motivated by a need for increased GPU memory on the one hand, and AWS’ VCPU limits on the other. The g4dn.12xlarge instance has 48 VCPUs, which was at the top of our VCPU limit. Originally we had been using G3 instances, but we found that these instances did not have enough GPU RAM (8GB, using NVIDIA Tesla M60 GPUs), resulting in a segmentation fault.</p>
 
       <a class="anchor" id="5"></a>
       <div class="page-header">
         <h2>5. Links to repository with source code, evaluation data sets and test cases</h2>
       </div>
-      <p> Our entire codebase for this project is hosted on Wisoo's github page linked <a href=https://github.com/osiajod/cs205_project>here</a>. In that page, we have also linked a folder titled <u>results</u> which contain our outputs from training our GPT-2 model on a variety of different nodes on AWS. These outputs allow us to better understand the accuracy and speed of scaling of GPT-2 which we will present in the plots below. We have also included several style-transfered texts that our generated from our trained GPT-2 model located under the <u>style_transferred</u> folder. The target texts for style transfer are a wikipedia article on MC Escher, a news article on hurricanes in the gulf of mexico, and a short story by jorge luis borges. The filenames follow the following naming convention <u>style_numepochs_target_window_step</u>. For example: 19th_1200_escher_9_4. These style transfered texts are how we qualitatively evaluated the effectiveness of our model in performing the textual style transfer. As an example, here is an excerpt taken from <u>juv_900_hurricance_9_4</u>. </p>
+      <h4> Source Code </h4>
+      <p> Our entire codebase for this project is hosted on Wisoo's github page linked <a href=https://github.com/osiajod/cs205_project>here</a>. In that page, we have also linked a folder titled <u>results</u> which contain our outputs from training our GPT-2 model on a variety of different nodes on AWS. These outputs allow us to better understand the accuracy and speed of scaling of GPT-2 which we will present in the plots below. We have also included several style-transfered texts that our generated from our trained GPT-2 model located under the <u>style_transferred</u> folder. The target texts for style transfer are a wikipedia article on MC Escher, a news article on hurricanes in the gulf of Mexico, and a short story by jorge luis borges. The filenames follow the following naming convention <u>style_numepochs_target_window_step</u>. For example: 19th_1200_escher_9_4. These style transfered texts are how we qualitatively evaluated the effectiveness of our model in performing the textual style transfer. As an example, here is an excerpt taken from <u>juv_900_hurricance_9_4</u>. </p>
       <blockquote class="blockquote">
       <p class="mb-0">
       May is the country in which most of these men in America travel in the late-season and in a level sense of the country, so strong an effort to move across to reinforce new shipping during the autumn will appear with gaining strength at extreme hours when both men are already together. Thus far only, that time before the 1915 sick-leave of the African coast of Mexico has been fostering with the passage between San Diego and the Rio Guayana Warinar region.
@@ -131,7 +141,7 @@
       <footer class="blockquote-footer">Execerpt from juv_900_hurricance_9_4</footer>
       </blockquote>
 
-      <p> During our training phase, we will be timing our training of GPT-2 on two different sources of text from Eldritchdark and Project Gutenberg. We will be using the Zothique text as well as the Juvenile text. The Zothique text represents the smallest source of text (201Kb zipped) avaliable on Project Gutenberg whilst the Juvenile text represents the largest source of text (484Mb zipped). Using this spectrum of sizes allows us to better appreciate the performance of our model outlined in <a href="#7">Section 7</a> below. </p>
+      <p> During our training phase, we will be timing our training of GPT-2 on two different sources of text from Eldritchdark and Project Gutenberg. We will be using the Zothique text as well as the Juvenile text. The Zothique text represents the smallest source of text (201Kb zipped) available on Project Gutenberg whilst the Juvenile text represents the largest source of text (484Mb zipped). Using this spectrum of sizes allows us to better appreciate the performance of our model outlined in <a href="#7">Section 7</a> below. </p>
 
       <a class="anchor" id="6"></a>
       <div class="page-header">
@@ -143,6 +153,7 @@
       <div class="page-header">
         <h2>7. Performance evaluation (speed-up, throughput, weak and strong scaling) and discussion about overheads and optimizations done</h2>
       </div>
+      <h4> Speedup/Scaling </h4>
       <p> As mentioned above, we ran our parallel model on an AWS EC2 g4dn.12xlarge instance. This model had 4 Nvidia T4 Tensor Core GPUs, which allowed us to test and exploit parallelism in our code. As a baseline, we first ran our code on a single node and increased the number of processes on that node. We plot the amount of time needed for different amount of steps/epochs during our training of the model. We present our plots for this on Zontique and Juvenile below: </p>
 
         <div class="row">
@@ -166,7 +177,7 @@
           </div>
       </div>
       <br/>
-
+      <h4>Discussion of Overheads and Optimizations done</h4>
       <p>By both varying the problem size and number of nodes, we have shown the weak and strong scaling for our parallel application. Interestingly, our parallel "multi-node" case showed slowdown compared to the single node case. In some cases, this slowdown can be severe, showing an almost 2x slowdown when comparing the time needed to perform training on the Juvenile and Zotique datasets when 4 nodes/processes are involved. Moreover, we also noticed that increasing the level of parallelism in our application did not result in any speedups even in the 1 node case. This implies that there is significant overheads which we investigated further. Upon further research investigation, we noticed that the communication costs for our application is immense. As supported by this article <a href = "https://timdettmers.com/2014/10/09/deep-learning-data-parallelism/">here</a>, data parallelism does not yield a good result due to the amount of data that needs to be passed around the nodes. During each backward pass of our training phase, we need to broadcast all gradient values to all other GPUs. With <b> 117 million parameters</b> to train in our smallest example of GPT-2, this represents a huge amount of communication overhead which outweights the computational benefit that we got from scaling the number of processors. 
 
       Theoretically, there are optimizations that we could have pursued to reduce communication costs in our project. We could have reduced the parameters of the number of parameters with layers such as max pooling or using convolution layers. However, that will edit the fundamental structure of GPT-2 that is empirically tested by OpenAI. Moreover with the initial 117 million parameters to train, it is not feasible to decide on which layers to modify given the timeframe that we have. </p>
@@ -175,25 +186,57 @@
       <div class="page-header">
         <h2>8. Description of advanced features</h2>
       </div>
-      <p> Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-      tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-      quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-      consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-      cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-      proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+      <h4> Horovod + Ring all-reduce algorithm </h4>
+      <p> The main advanced feature in our parallel programming model is our API/programming model usage of <b>Horovod and the Ring-All-Reduce</b> algorithm. This algorithm was not discussed in class but a solution which we found to have great potential in speeding-up parallel applications. Horovod is a distributed deep learning training framework for TensorFlow, Keras, PyTorch, and Apache MXNet. This framework is based on MPI4Py and developed/supported by <a href = "https://eng.uber.com/horovod/">Uber Engineering</a>. In class, we mostly explored Master-Worker models (all-reduce) that is commonly seen in the vanilla implementation of OpenMPI. However, there are advantages of Horovod and the Ring-All-Reduce algorithm over this vanilla implementation. As part of our exploration of this model, we also performed a asymptotic analysis of these two algorithms and found that the ring-all-reduce algorithm had a superior maximum bandwidth that we outlined in the image below:
+
+        <div class="row">
+          <div class="text-center">
+           <img src="./img/allreduce_ringallreduce.png" alt="allreduce_ringallreduce" height="450px">            
+          </div>
+      </div>
+      <br/>
+      Adopting this advanced feature was a challenging task for our team as there was less support and documentation available for us compared to vanilla solutions. This included less academic papers or tools accessible to us for this project. This became especially relevant during the scaling phase of our project, as we were aware that from internal benchmarking tools and peer-reviewed papers, Horovod’s communication overhead increases significantly as the number of nodes increases (especially with a model as large as ours).</p>
+
+      <h4> Accessing Textual Style transfer </h4>
+      <p>Another advanced feature that we explored was the possibility of incorporating quality metrics in our final project. Quality metrics will provide us with a structured methodology in accessing the effectiveness of our textural style transfer from a source to a target text. We explored different approaches to do this from academic papers such as one from the MIT media lab linked <a href="https://arxiv.org/pdf/1904.02295.pdf"> here</a>. This assessment will be based on 3 facets of evaluation, namely:
+        <ol>
+        <li>Style transfer intensity: How different are the texts?</li>
+        <li>Content Preservation: How similar is the content?</li>
+        <li>Naturalness: How natural is the output?</li>
+        </ol>
+      After further investigation into this, we chose to adopt a qualitative approach to assessing style transfer instead. Reimplementing the textual style transfer metrics from the MIT academic paper would have involved a lot of extra effort and we wanted our overall project to be mostly focused on the computational aspect rather than the Natural Language Processing aspect. The metrics would have involved more data conditioning and training+debugging at least 3 additional auxiliary models on top of our existing GPT-2 model. A qualitative approach to assessing style transfer based on a 1-5 scale allowed us to save time whilst giving us a general idea of how our models are performing.    
+ </p>
 
       <a class="anchor" id="9"></a>
       <div class="page-header">
         <h2>9. Final discussion about goals achieved, improvements suggested, lessons learnt, future work, interesting insights</h2>
       </div>
-      <p> using the larger gpt-2 models, more work on parallelizing gpt-2, modify the gpt-2 algorithm to be more suited for this task, frame the textual style transfer more rigorously and use the metrics we originally proposed.</p>
+      <h4> Goals achieved</h4>
+      <p> In our project, we have achieved most of the goals that we set out to achieve. We ran our parallel application for textual style transfer on both a single node as well as a multi-node system. We have also investigated how model's training scales with different number of nodes and processes. This led us to interesting findings about the disadvantages of Horovod in data-intensive applications. In this project, we have also shown the use of the novel parallel programming model of Horovod's Ring-all-reduce algorithm on an AWS EC2 cluster.</p>
+
+
+      <h4> Lessons learnt/interesting insights/challenges with running Horovod on Harvard Cannon </h4>
+      <p> Our original plan was to use Harvard’s Cannon research computing cluster to run the training. We were able to implement the serialized training of the GPT2 language model on the Cannon cluster, but the Horovod parallelization was significantly more difficult. The team spent a considerable amount of time pursuing this option, but ultimately opted to utilize AWS compute resources. The error messages were slightly cryptic, and after we realized the segmentation fault on the AWS implementation was a simple Out-Of-Memory case that could be cured by boosting RAM, we attempted to boost the memory available to the job we were running on Cannon’s GPU partition. However, the issue persisted. Eventually, it appeared that the source of the segmentation fault lay in the specific versions of OpenMPI and GCC that we were installing via the modules ready for easy installation on the cluster. Horovod relies on GCC version 4.9 and either version 3.1.2 or version 4.0.0 of OpenMPI. Unfortunately, installing the correct OpenMPI module required an upgrade to a more recent version of GCC. Thus, the fault persisted. One potential path to deal with the situation would be to manually install the correct versions of GCC and OpenMPI from source into our home directory. We pursued this course in parallel with our implementation on AWS. Eventually, we were successful in the AWS implementation and found that the speedup produced allowed us to train the model in a reasonable amount of wall-clock time. Given this success in combination with ongoing obstacles in the manual installation of the correct OpenMPI and GCC versions (and the recognition that the bug perhaps would persist regardless of the new installation), we opted for the AWS path. Additionally, we noted that the time per training step for our serial training implementations on both Canon and AWS system were comparable, leading us to conclude that investing the additional hours to re-implement the parallelized Horovod training on the Canon cluster would not be necessary.</p>
+
+      <h4> Future Work </h4>
+      <p> There are several areas of future work that we propose for our project. Given more time, we can use the larger GPT-2 models as well as experiment with the vanilla all-reduce algorithm on MPI. On an ambitious level, we can also modify the core GPT-2 model from OpenAI to be more suited for this task of textual style transfer. Lastly, we can also frame the textual style transfer problem more rigorously and use the metrics we originally proposed from the MIT Media Lab academic paper.</p>
 
       <a class="anchor" id="10"></a>
       <div class="page-header">
         <h2>10. Citations</h2>
       </div>
-      <p> https://github.com/orange-erotic-bible credit for the text generation idea (warning, the repo is potentially offensive.)
-      https://timdettmers.com/2014/10/09/deep-learning-data-parallelism/</p>
+      <p> 
+        <ol>
+        <li> <a href="https://harvard-iacs.github.io/2020-CS205/lab/I7/guide/Guide_I7.pdf">MPI on AWS</a> - Harvard CS205 - Spring 2020 - Infrastructure Guide - I7</li>
+        <li><a href="https://openai.com/blog/better-language-models/">Blog Post by OpenAI</a> on GPT-2 and language models
+        <li><a href=https://github.com/orange-erotic-bible> Orange Erotic Bible repository </a> for initial project inspiration (Warning: this repository is potentially offensive)</li>
+        <li><a href=https://timdettmers.com/2014/10/09/deep-learning-data-parallelism/>Article</a> by Tim Dettmers on parallelizing deep learning on GPUs</li>
+        <li><a href="https://arxiv.org/pdf/1904.02295.pdf">Paper by MIT Media Lab</a> on assessing textual style transfer.</li>
+        <li> <a href="http://www.eldritchdark.com/">EldritchDark</a> text used as a source text</li>
+        <li> <a href="https://github.com/pgcorpus/gutenberg/tree/master/src">Project Gutenberg Text</a> used as a source text</li>
+        <li> <a href="http://www.eldritchdark.com/">EldritchDark text</a> used as a source text</li>
+        <li> <a href="https://github.com/kiasar/gutenberg_cleaner"> Cleaner functionality repository </a> used to clean the source text</li>          
+        </ol>
 
     </div> <!-- /container -->
 

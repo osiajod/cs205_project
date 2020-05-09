@@ -1,7 +1,7 @@
 import tensorflow as tf
 # import tensorflow.compat.v1 as tf
 import numpy as np
-from . import gpt2
+from . import gpt2parallelize
 from . import original_gpt2
 import argparse
 import json
@@ -145,7 +145,7 @@ def build(config, checkpoint_path, session=None, name=None, comm=None):
     eager = session is None and tf.executing_eagerly()
     def _build(comm=comm):
         x = tf.ones(shape=(1, 1), dtype=tf.int32)
-        model = gpt2.GPT2(config=config, name=name)
+        model = gpt2parallelize.GPT2(config=config, name=name)
         y = model(x)
         weights = model.weights
         assigns = [u.assign(v) for u, v in zip(weights, original_weights)]

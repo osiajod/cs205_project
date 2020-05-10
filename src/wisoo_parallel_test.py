@@ -1,6 +1,7 @@
 import json
 import tensorflow as tf
 import tensorflow.compat.v1 as tf1
+from tensorflow.keras import initializers
 import numpy as np
 from mpi4py import MPI
 from gpt2_keras.builder.gpt2parallelize import GPT2, MultiLayerPerceptron
@@ -224,6 +225,7 @@ else: # worker cores  / nodes
     # req_mlp = comm.irecv(source=0, tag=rank)
     continue_forward = True
     recon_MLPs = []
+    """
     #reconstruct MLP using from_config
     for mlp in MLPs:
         temp = MultiLayerPerceptron(embedding_size=768,
@@ -245,7 +247,32 @@ else: # worker cores  / nodes
         b = mlp["config"]["projection"].pop(0)
         w = mlp["config"]["projection"].pop(0)
         temp.projection.set_weights((b, w))
+    """
+    for mlp in MLPs:
+        temp = MultiLayerPerceptron(embedding_size=768,
+                                    perceptron_size=3072,
+                                    trainable=True,
+                                    initializer_range=0.02,
+                                    name=None
+                                    )
+        temp_perceptron = tf.keras.layers.Dense(units=3072,
+                                                activation=None,
+                                                kernel_initializer=initializers.Zeros(),
+                                                name="perceptron"
+                                                )
+        b = mlp["config"]["perceptron"].pop(0)
+        w = mlp["config"]["perceptron"].pop(0)
+        temp_perceptron.set_weights((b, w))
+        temp_projection = tf.keras.layers.Dense(units=768,
+                                                kernel_initializer=initializers.Zeros(),
+                                                name="projection")
+        temp.perceptron = temp_perceptron
 
+        b = mlp["config"]["projection"].pop(0)
+        w = mlp["config"]["projection"].pop(0)
+        temp_projection.set_weights((b,w))
+
+        temp.projection = temp_projection
 
 
 

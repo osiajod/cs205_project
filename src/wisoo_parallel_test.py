@@ -236,19 +236,17 @@ else: # worker cores  / nodes
         # print(mlp)
 
 
-        for layer in temp.layers:
-            if layer.name == "layer_norm": continue
-            elif layer.name == "perceptron":
-                b = mlp["config"]["perceptron"].pop(0)
-                w = mlp["config"]["perceptron"].pop(0)
-                temp.perceptron.set_weights((b,w))
 
-            elif layer.name == "projection":
-                b = mlp["config"]["projection"].pop(0)
-                w = mlp["config"]["projection"].pop(0)
-                temp.projection.set_weights((b, w))
-            else:
-                print("something wrong at line 251")
+        b = mlp["config"]["perceptron"].pop(0)
+        w = mlp["config"]["perceptron"].pop(0)
+        temp.perceptron.set_weights((b,w))
+
+
+        b = mlp["config"]["projection"].pop(0)
+        w = mlp["config"]["projection"].pop(0)
+        temp.projection.set_weights((b, w))
+
+
 
 
 

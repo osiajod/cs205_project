@@ -242,7 +242,7 @@ else: # worker cores  / nodes
         b = mlp["config"]["perceptron"].pop(0)
         w = mlp["config"]["perceptron"].pop(0)
         input_ = tf.keras.layers.Input(shape=(768,))
-        temp_perceptron = tf.keras.layers.Dense(3072).set_weights(np.array([w,b]))
+        temp_perceptron = tf.keras.layers.Dense(3072)
         encoded = temp_perceptron(input_)
         model = tf.keras.Model(inputs=input_, outputs=encoded)
         temp_perceptron.set_weights(np.array([w,b]))

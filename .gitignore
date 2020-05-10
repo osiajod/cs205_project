@@ -132,6 +132,7 @@ dmypy.json
 # for Project Gutenberg
 data/
 
+
 # data
 *.csv.gz
 *.zip
@@ -142,3 +143,4 @@ src/models/124M/model.ckpt.data-00000-of-00001
 *.swp
 
 .idea/
+

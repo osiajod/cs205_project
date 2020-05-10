@@ -311,10 +311,10 @@ class MultiLayerPerceptron(tf.keras.layers.Layer):
     def get_config(self):
 
         config = super(MultiLayerPerceptron, self).get_config()
-        config["layer_norm"] = self.layer_norm.weights
-        config["perceptron"] = self.perceptron.weights #(768, 3072)
+        config["layer_norm"] = self.layer_norm.get_weights()
+        config["perceptron"] = self.perceptron.get_weights() #(768, 3072)
         # shape before projection (1, 1, 3072)
-        config["projection"] = self.projection.weights
+        config["projection"] = self.projection.get_weights()
         # shape after projection (1, 1, 768)
 
 

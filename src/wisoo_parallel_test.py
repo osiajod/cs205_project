@@ -245,16 +245,18 @@ else: # worker cores  / nodes
         temp_perceptron = tf.keras.layers.Dense(3072)
         encoded = temp_perceptron(input_)
         model = tf.keras.Model(inputs=input_, outputs=encoded)
-        print(np.array(w).shape)
-        print(np.array(b).shape)
-
+        # print(np.array(w).shape)
+        # print(np.array(b).shape)
         temp_perceptron.set_weights(np.array([w,b]))
         temp.perceptron = temp_perceptron
 
-        b = mlp["config"]["projection"].pop(0)
         w = mlp["config"]["projection"].pop(0)
-        input_2 = tf.keras.layers.Input(shape=(3072,))
-        temp_projection = tf.keras.layers.Dense(768).set_weights(np.array([w,b]))(input_2)
+        b = mlp["config"]["projection"].pop(0)
+        input_ = tf.keras.layers.Input(shape=(3072,))
+        temp_projection = tf.keras.layers.Dense(768)
+        projected = temp_perceptron(input_)
+        model = tf.keras.Model(inputs=input_, outputs=projected)
+        temp_projection.set_weights(np.array([w, b]))
         temp.projection = temp_projection
 
 

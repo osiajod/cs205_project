@@ -301,6 +301,8 @@ else: # worker cores  / nodes
     while continue_forward:
         # For each MLPs check if isend was called
         for i in  range(num_decoder):
+            tag = rank + DECODER_TAG*i + ZSLICE_TAG*rank
+            print(f"printing tag for rank{rank}: ", tag)
             req_partitionedZ1 = comm.irecv(source=0,
                                            tag=rank + DECODER_TAG*i + ZSLICE_TAG*rank)  # rank + 1000 : partitioned_Z1 from this decoder block' attention layer + input (x+a)
             partitionedZ1 = req_partitionedZ1.wait()

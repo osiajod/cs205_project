@@ -234,9 +234,10 @@ else: # worker cores  / nodes
                              )
         # print("printing mlp")
         # print(mlp)
-        temp.layer_norm.weights = mlp["config"]["layer_norm"]
-        temp.perceptron.weights = mlp["config"]["perceptron"]
-        temp.projection.weights = mlp["config"]["projection"]
+        # temp.layer_norm.weights = mlp["config"]["layer_norm"]
+        # temp.perceptron.weights = mlp["config"]["perceptron"]
+        # temp.projection.weights = mlp["config"]["projection"]
+        temp.from_config(mlp)
         recon_MLPs.append(temp)
 
 

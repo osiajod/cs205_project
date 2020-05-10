@@ -232,6 +232,8 @@ else: # worker cores  / nodes
                              initializer_range=0.02,
                              name=None
                              )
+        print("printing mlp")
+        print(mlp)
         temp.layer_norm.weights = mlp["layer_norm"]
         temp.perceptron.weights = mlp["perceptron"]
         temp.projection.weights = mlp["projection"]

@@ -152,11 +152,11 @@
         <p> Since data parallelism is explained in detail in section 4, section 8 and owes a lot to the implementations of Horovod library, we elaborate on the software designs relevant to the model parallelism.</p>
       <p> <b>Model Parallelism </b></p>
       <p>Model parallelism refers to the parallelization paradigm that uses the same data for every thread, but splits the model among threads. As mentioned briefly in section 4, the multilayer perceptrons(feedforward layers) and the projection layers can be extracted from each of the 12 decoder blocks and distributed evenly among processes / nodes to process the corpus matrix in parallel. In other words, after the initialization of the full architecture and distribution, the master process has to be only responsible for embedding the corpus matrix, layer normalization and gathering processed vectors. To illustrate the architecture, we provide the following image.</p>
-      <img src="./img/layers.png" class="center-block" height=500px>
+      <img src="./img/layers.png" class="center-block" height=400px>
       <p>The red box indicates the weights and bias parameters contained in the first decoder block. the 'c_fc' stands for perceptron layer, while 'c_proj' stands for the projection layer. Both of these can be distributed as a package to exploit model parallelism. The below code section demonstrates how we implemented this idea.</p>
       <img src="./img/modelpara1.png" class="center-block" height=500px>
       <p>From line 56 to line 61, the master process serializes the decoder blocks' MultiLayerPerceptron instances. Then, in line 64, the serialized MLPs are broadcast to all the nodes using OpenMPI (mpi4py).</p>
-      <img src="./img/modelpara2.png" class="center-block" height=500px>
+      <img src="./img/modelpara2.png" class="center-block" height=300px>
       <p>The worker nodes selectively reconstruct the MLP portion of the decoder blocks and receive partitioned attention-weighted matrices from the master node. The workers execute forward runs and project the results back to the embedding dimensions. Finally, they report the results back to the master process.</p>
       <a class="anchor" id="7"></a>
       <div class="page-header">

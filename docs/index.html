@@ -108,7 +108,7 @@
       <h4> Description of Model </h4>
       <p> The core model we used for textual style transfer is GPT-2. GPT-2 is a transformer-based Neural Net for unsupervised Multitask Learning. In contrast to other transformers, this model consists of Decoder blocks only and the model architecture is seen below. In the original paper by OpenAI, this model is able to perform zero-shot reading comprehension, summarization, translation and question answering to varying degrees of success.</p>
 
-      <img src="./img/gpt-2decoders.png" class="center-block" width=400px>
+      <img src="./img/gpt2-decoders.png" class="center-block" width=400px>
 
 
       <p> In describing our model for textual style transfer, I will first outline the core algorithm in generating new text from our corpus of data outlined above. The algorithm for generating text takes as input a pre-trained GPT-2 and a text file. The text file is chunked into contiguous groups of sentences which are used as prompts for GPT-2. The contiguous group is then shifted by some step size. For this project, the chunk/window size was <b>9</b> and the step size was <b>4</b>. 4 sentences were generated at a time using GPT-2. We used nltk as the sentence tokenizer. </p>

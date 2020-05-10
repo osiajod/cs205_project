@@ -245,6 +245,9 @@ else: # worker cores  / nodes
         temp_perceptron = tf.keras.layers.Dense(3072)
         encoded = temp_perceptron(input_)
         model = tf.keras.Model(inputs=input_, outputs=encoded)
+        print(np.array(w).shape)
+        print(np.array(b).shape)
+
         temp_perceptron.set_weights(np.array([w,b]))
         temp.perceptron = temp_perceptron
 

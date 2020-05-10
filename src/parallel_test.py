@@ -100,6 +100,7 @@ try:
                     Z1 = transformer_model.layers[0].mlp.layer_norm(Z1)
                     print(np.array(Z1).shape) # (partition_size, max_seq, embed_size)
                     print("printing type of Z1", type(Z1))
+
                     for worker_num in range(1,size):
                         #point-to-point communication
                         #Send

@@ -1,0 +1,3 @@
+[submodule "src/gpt2-keras"]
+	path = src/gpt2-keras
+	url = https://github.com/ShenakhtPajouh/gpt2-keras.git

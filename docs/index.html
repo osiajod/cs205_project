@@ -106,9 +106,10 @@
       <h4> Description of Data </h4>
       <p> For our source textual data, we used the Zothique stories obtained from <a href = khttp://www.eldritchdark.com/> this link </a> and Project Gutenberg books obtained using from this <a href = https://github.com/pgcorpus/gutenberg/tree/master/src> repository</a>. The raw project gutenberg corpus is almost 9GB compressed that requires processing. We used the super_cleaner functionality from this <a href = https://github.com/kiasar/gutenberg_cleaner> repository </a> to strip of all of the project gutenberg boilerplate. The pgcorpus repository also generates a metadata file while we used to separate the project gutenberg books into the genres: juvenile, 19th century, science fiction, adventure, fairy tales, and poetry. Of those, we only used the first three.</p>
       <h4> Description of Model </h4>
-      <p> The core model we used for textual style transfer is GPT-2. GPT-2 is a transformer-based Neural Net for unsupervised Multitask Learning. This model consists of stacked Decoders and the model architecture is seen below. In the original paper by OpenAI, this model is able to perform zero-shot reading comprehension, summarization, translation and question answering to varying degrees of success.</p>
 
-      <img class="img-responsive" src="./img/gpt2_decoder.png" class="center-block" width=800px>
+      <p> The core model we used for textual style transfer is GPT-2. GPT-2 is a transformer-based Neural Net for unsupervised Multitask Learning. In contrast to other transformers, this model consists of Decoder blocks only (as opposed to a combination of Encoders and Decoders) and the model architecture is seen below. In the original paper by OpenAI, this model is able to perform zero-shot reading comprehension, summarization, translation and question answering to varying degrees of success.</p>
+
+      <img src="./img/gpt2-decoders.png" class="center-block" height=500px>
 
 
       <p> In describing our model for textual style transfer, we will also describe the process of generating new text from our corpus of data outlined above. The algorithm for generating text takes as input a pre-trained GPT-2 and a text file. The text file is chunked into contiguous groups of sentences which are used as prompts for GPT-2. The contiguous group is then shifted by some step size. For this project, the chunk/window size was <b>9</b> and the step size was <b>4</b>. 4 sentences were generated at a time using GPT-2. We used nltk as the sentence tokenizer. </p>
@@ -119,12 +120,12 @@
       </div>
       <h4> Parallel Application </h4>
       <p> Our parallel application involves exploiting a range of different parallelism levels including many-node and many-core parallelism as we used multiple GPUs on multiple nodes. There are two main areas to parallelize: the training phase and the generation phase. </p>
-      <p> In the training phase of our project, the transformer computations and gradient updates in GPT-2 fine-tuning will be parallelized. In the generation phase, we will be parallelizing the generation of style-transfered text from a source file. </p>
+      <p> In the training phase of our project, the transformer computations and gradient updates in GPT-2 fine-tuning will be parallelized. In the generation phase, we will be parallelizing the feedforward process of the input source file. </p>
       <h4> Programming Model</h4>
-      <p> In deciding on the parallel programming model to use, we used the ring all-reduce algorithm via Horovod that utilizes open MPI. Compared to the alternative of distributed tensorflow's worker-parameter server model, Horovod's ring all-reduce algorithm is superior in terms of both speed as well as space due to the absence of the need for a parameter server. An overview of this parallel algorithm is shown below. </p>
+      <p> In deciding on the proper model for <b>data parallelism</b>, we used the ring all-reduce algorithm via Horovod that utilizes open MPI. Compared to the alternative of distributed tensorflow's worker-parameter server model, Horovod's ring all-reduce algorithm is superior in terms of reducing network bandwith bottleneck due to the absence of the need for a parameter server. An overview of this parallel algorithm is shown below. </p>
 
       <img src="./img/ringallreduce.png" class="center-block" width=1000px>
-
+      <p> On the other hand, we also explored the possibility of <b>model parallelism</b> by exploiting the transformer architecture. A key property of gpt-2 is that in the decoder blocks, the input word in each position flows through its own path. Up to the self-attention layer, there exist positional dependencies between embedded word vectors, but the inputs to the feed-forward layer do not have those dependencies. Thus, the each of the paths that the attention-weighted vectors take can be executed in parallel while flowing through the feed-forward layer and the projection layer. It follows from this observation that we define ‘c’ in Amdahl’s law to be the ratio of the parameters in the feedforward neural network of each encoder multiplied by the number of encoders in the GPT-2. In case of the smallest GPT-2 model, we have 28.3 million parameters that can be updated in parallel. This is about 23% of the total number of parameters in GPT-2. Even more promising is the fact that the bigger versions of GPT-2 differ mostly in the number of Decoder stacks, meaning the parallelizable portion only increases with bigger models.</p>
       <h4>Platform and Infrastructure </h4>
       <p> Our language of choice will be Python which allows us to access a wide range of different libraries for our project. Our machine learning framework used is Tensorflow and Keras as well as Horovod as mentioned above. Our platform operating system used is Deep Learning Amazon Machine Image (Ubuntu) which came with Tensorflow and Horovod pre-configured. Our infrastructure of choice is Amazon's Elastic Compute 2 (EC2). Originally, we planned to use Harvard's FAS Cannon supercomputer as well but had issues with the parallel implementation which we will outline later. For the single-node training on AWS, we used the g4dn.12xlarge EC2 instance. This instance has four GPUs, each with 16GB of memory. For the multimode training, we used four g4dn.xlarge instances, which each have one GPU with 16GB of memory. Since these instances are both members of AWS’ G4 family of instances, the GPUs they use are NVIDIA T4 Tensor Core GPUs. These decisions were motivated by a need for increased GPU memory on the one hand, and AWS’ VCPU limits on the other. The g4dn.12xlarge instance has 48 VCPUs, which was at the top of our VCPU limit. Originally we had been using G3 instances, but we found that these instances did not have enough GPU RAM (8GB, using NVIDIA Tesla M60 GPUs), resulting in a segmentation fault.</p>
 
@@ -133,7 +134,7 @@
         <h2>5. Links to repository with source code, evaluation data sets and test cases</h2>
       </div>
       <h4> Source Code </h4>
-      <p> Our entire codebase for this project is hosted on Wisoo's github page linked <a href=https://github.com/osiajod/cs205_project>here</a>. In that page, we have also linked a folder titled <u>results</u> which contain our outputs from training our GPT-2 model on a variety of different nodes on AWS. These outputs allow us to better understand the accuracy and speed of scaling of GPT-2 which we will present in the plots below. We have also included several style-transfered texts that our generated from our trained GPT-2 model located under the <u>style_transferred</u> folder. The target texts for style transfer are a wikipedia article on MC Escher, a news article on hurricanes in the gulf of Mexico, and a short story by jorge luis borges. The filenames follow the following naming convention <u>style_numepochs_target_window_step</u>. For example: 19th_1200_escher_9_4. These style transfered texts are how we qualitatively evaluated the effectiveness of our model in performing the textual style transfer. As an example, here is an excerpt taken from <u>juv_900_hurricance_9_4</u>. </p>
+      <p> Our entire codebase for this project is hosted on our team's github repository linked <a href=https://github.com/osiajod/cs205_project>here</a>. In that repository, we have also linked a folder titled <u>results</u> which contain our outputs from training our GPT-2 model on a variety of different nodes on AWS. These outputs allow us to better understand the accuracy and speed of scaling of GPT-2 which we will present in the plots below. We have also included several style-transfered texts that our generated from our trained GPT-2 model located under the <u>style_transferred</u> folder. The target texts for style transfer are a wikipedia article on MC Escher, a news article on hurricanes in the gulf of Mexico, and a short story by jorge luis borges. The filenames follow the following naming convention <u>style_numepochs_target_window_step</u>. For example: 19th_1200_escher_9_4. These style transfered texts are how we qualitatively evaluated the effectiveness of our model in performing the textual style transfer. As an example, here is an excerpt taken from <u>juv_900_hurricance_9_4</u>. </p>
       <blockquote class="blockquote">
       <p class="mb-0">
       May is the country in which most of these men in America travel in the late-season and in a level sense of the country, so strong an effort to move across to reinforce new shipping during the autumn will appear with gaining strength at extreme hours when both men are already together. Thus far only, that time before the 1915 sick-leave of the African coast of Mexico has been fostering with the passage between San Diego and the Rio Guayana Warinar region.
@@ -155,7 +156,42 @@
       <div class="page-header">
         <h2>6. Technical description of the software design, code baseline, dependencies, how to use the code, and system and environment needed to reproduce your tests</h2>
       </div>
-      <p> <b>Will probably need to fill in our instructions on running.</b></p>
+      <h4> Software design </h4>
+      <p> <b>Data Parallelism </b></p>
+        <p> Since data parallelism is explained in detail in section 4, section 8 and owes a lot to the implementations of Horovod library, we elaborate on the software designs relevant to the model parallelism.</p>
+      <p> <b>Model Parallelism </b></p>
+      <p>Model parallelism refers to the parallelization paradigm that uses the same data for every thread, but splits the model among threads. As mentioned briefly in section 4, the multilayer perceptrons(feedforward layers) and the projection layers can be extracted from each of the 12 decoder blocks and distributed evenly among processes / nodes. Next, these layers can be applied independently to the partitioned attention weighted matrix to process it in a parallel manner. Following this method, after the initialization of the full architecture and distribution, the master process is only responsible for embedding the corpus matrix, layer normalization and gathering processed vectors. To illustrate the architecture, we provide the following image.</p>
+      <img src="./img/layers.png" class="center-block" height=400px>
+      <p>The red box indicates the weights and bias parameters contained in the first decoder block. the 'c_fc' stands for perceptron layer, while 'c_proj' stands for the projection layer. Both of these can be distributed as a package to exploit model parallelism. The below code section demonstrates how we implemented this idea.</p>
+      <img src="./img/modelpara1.png" class="center-block" height=500px>
+      <p>From line 56 to line 61, the master process serializes the decoder blocks' MultiLayerPerceptron instances. Then, in line 64, the serialized MLPs are broadcast to all the nodes using OpenMPI (mpi4py).</p>
+      <img src="./img/modelpara2.png" class="center-block" height=300px>
+      <p>The worker nodes selectively reconstruct the MLP portion of the decoder blocks and receive partitioned attention-weighted matrices from the master node. The workers execute forward runs and project the results back to the embedding dimensions. Finally, they report the results back to the master process. More details can be found in /src/parallel_test.py. </p>
+      <p>The code can be run with the following commands: </p>
+      <p>"cd src"</p>
+      <p>"mpiexec -n 13 python -m mpi4py ./parallel_test.py"</p>
+      <p>Because the program assumes that each process is allocated a decoder block, 'numprocs' has to be a number larger than 12.</p>
+      
+
+      <h4> Dependencies </h4>
+      <p> Python </p>
+      <ul>
+      <li> python=3.7 </li>
+      <li> numpy </li>
+      <li> tensorflow==2.0.0 </li>
+      <li> keras </li>
+      <li> horovod </li>
+      <li> regex </li>
+      <li> re </li>
+      <li> mpi4py </li>
+      <li> nltk </li>
+      <li> json </li>
+      <li> pickle </li>
+      </ul> 
+
+      <h4> System and Evironment </h4>
+      <p>AWS instance: The g4dn.12xlarge</p>
+      <p>Operating System / Image: Deep Learning Amazon Machine Image (Ubuntu)</p>
 
       <a class="anchor" id="7"></a>
       <div class="page-header">
@@ -185,7 +221,7 @@
         <h2>8. Description of advanced features</h2>
       </div>
       <h4> Horovod + Ring all-reduce algorithm </h4>
-      <p> The main advanced feature in our parallel programming model is our API/programming model usage of <b>Horovod and the Ring-All-Reduce</b> algorithm. This algorithm was not discussed in class but a solution which we found to have great potential in speeding-up parallel applications. Horovod is a distributed deep learning training framework for TensorFlow, Keras, PyTorch, and Apache MXNet. This framework is based on MPI4Py and developed/supported by <a href = "https://eng.uber.com/horovod/">Uber Engineering</a>. In class, we mostly explored Master-Worker models (all-reduce) that is commonly seen in the vanilla implementation of OpenMPI. However, there are advantages of Horovod and the Ring-All-Reduce algorithm over this vanilla implementation. As part of our exploration of this model, we also performed a asymptotic analysis of these two algorithms and found that the ring-all-reduce algorithm had a superior maximum bandwidth that we outlined in the image below:
+      <p> The main advanced feature in our parallel programming model is our API/programming model usage of <b>Horovod and the Ring-All-Reduce</b> algorithm. This algorithm was not discussed in class but a solution which we found to have great potential in speeding-up parallel applications. Horovod is a distributed deep learning training framework for TensorFlow, Keras, PyTorch, and Apache MXNet. This framework is based on MPI4Py and developed/supported by <a href = "https://eng.uber.com/horovod/">Uber Engineering</a>. In class, we mostly explored Master-Worker models (all-reduce) that is commonly seen in the vanilla implementation of OpenMPI. However, there are advantages of Horovod and the Ring-All-Reduce algorithm over this vanilla implementation. As part of our exploration of this model, we also performed an asymptotic analysis of these two algorithms and found that the ring-all-reduce algorithm was superior in terms of preventing the network bandwidth bottleneck. This is outlined in the image below:
 
         <div class="row">
           <div class="text-center">
@@ -234,6 +270,8 @@
         <li> <a href="https://github.com/pgcorpus/gutenberg/tree/master/src">Project Gutenberg </a> text used as a source text</li>
         <li> <a href="http://www.eldritchdark.com/">EldritchDark</a> text used as a source text</li>
         <li> <a href="https://github.com/kiasar/gutenberg_cleaner"> Cleaner functionality repository </a> used to clean the source text</li>          
+        <li> <a href="https://github.com/ShenakhtPajouh/gpt2-keras"> GPT-2 in Keras and Tensorflow2.0 </a> modified and used to develop /src/parallel_test.py </li>
+        <li> <a href="http://jalammar.github.io/illustrated-gpt2/"> Illustrated GPT-2 </a> detailed analysis on GPT-2 structure and photos used for illustration </li>
         </ol>
 
     </div> <!-- /container -->

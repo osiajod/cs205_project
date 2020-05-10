@@ -157,7 +157,33 @@
       <img src="./img/modelpara1.png" class="center-block" height=500px>
       <p>From line 56 to line 61, the master process serializes the decoder blocks' MultiLayerPerceptron instances. Then, in line 64, the serialized MLPs are broadcast to all the nodes using OpenMPI (mpi4py).</p>
       <img src="./img/modelpara2.png" class="center-block" height=300px>
-      <p>The worker nodes selectively reconstruct the MLP portion of the decoder blocks and receive partitioned attention-weighted matrices from the master node. The workers execute forward runs and project the results back to the embedding dimensions. Finally, they report the results back to the master process.</p>
+      <p>The worker nodes selectively reconstruct the MLP portion of the decoder blocks and receive partitioned attention-weighted matrices from the master node. The workers execute forward runs and project the results back to the embedding dimensions. Finally, they report the results back to the master process. More details can be found in /src/parallel_test.py. </p>
+      <p>The code can be run with the following commands: </p>
+      <p>"cd src"</p>
+      <p>"mpiexec -n 13 python -m mpi4py ./parallel_test.py"</p>
+      <p>Because the program assumes that each process is allocated a decoder block, 'numprocs' has to be a number larger than 12.</p>
+      
+
+      <h4> Dependencies </h4>
+      <p> Python </p>
+      <ul>
+      <li> python=3.7 </li>
+      <li> numpy </li>
+      <li> tensorflow==2.0.0 </li>
+      <li> keras </li>
+      <li> horovod </li>
+      <li> regex </li>
+      <li> re </li>
+      <li> mpi4py </li>
+      <li> nltk </li>
+      <li> json </li>
+      <li> pickle </li>
+      </ul> 
+
+      <h4> System and Evironment </h4>
+      <p>AWS instance: The g4dn.12xlarge</p>
+      <p>Operating System / Image: Deep Learning Amazon Machine Image (Ubuntu)</p>
+
       <a class="anchor" id="7"></a>
       <div class="page-header">
         <h2>7. Performance evaluation (speed-up, throughput, weak and strong scaling) and discussion about overheads and optimizations done</h2>

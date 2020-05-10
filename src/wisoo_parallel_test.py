@@ -98,7 +98,7 @@ if rank == 0: # If this is the master, start building the GPT2 model
                 Z1 = transformer_model.layers[0].mlp.layer_norm(Z1)
                 print(np.array(Z1).shape) # (partition_size, max_seq, embed_size)
                 print("printing type of Z1", type(Z1))
-                for worker_num in range(size):
+                for worker_num in range(1,size):
                     #point-to-point communication
                     #Send
                     if ith_epoch == epochs-1:
@@ -110,21 +110,21 @@ if rank == 0: # If this is the master, start building the GPT2 model
                     print(offset)
                     if worker_num != size-1:
                         req_Z1 = comm.isend(Z1[:, offset: offset+worker_share,:],
-                                            dest=worker_num+1,
-                                            tag=worker_num+1 + DECODER_TAG*i + ZSLICE_TAG*worker_num) #
+                                            dest=worker_num,
+                                            tag=worker_num+ + DECODER_TAG*i + ZSLICE_TAG*worker_num) #
 
                     else:
                         req_Z1 = comm.isend(Z1[:, offset:, :],
-                                            dest=worker_num+1,
-                                            tag=worker_num+1 + DECODER_TAG*i + ZSLICE_TAG*worker_num) #
+                                            dest=worker_num,
+                                            tag=worker_num + DECODER_TAG*i + ZSLICE_TAG*worker_num) #
                     comm.bcast(continue_forward, root=0)
                     # At this point , we are done distributing Z1.
 
                     # req_continueForwrad = comm.isend(continue_forward, dest=worker_num+1, tag=worker_num+101)
 
                 request_list = []
-                for worker_num in range(size):
-                    request_list.append(comm.irecv(source=worker_num, tag= worker_num+1 + DECODER_TAG*i + ZSLICE_TAG*worker_num))
+                for worker_num in range(1,size):
+                    request_list.append(comm.irecv(source=worker_num, tag= worker_num + DECODER_TAG*i + ZSLICE_TAG*worker_num))
 
                 status = [MPI.Status() for i in range(0, size)]
 
@@ -150,7 +150,7 @@ if rank == 0: # If this is the master, start building the GPT2 model
                 Z1 = embedded + A1
                 # print(Z1.shape) # (104, 500, 768)  == (batch, max_seq, embed_size)
                 Z1 = transformer_model.layers[0].mlp.layer_norm(Z1)
-                for worker_num in range(size):
+                for worker_num in range(1,size):
                     # point-to-point communication
                     # Send
                     if ith_epoch == epochs - 1:
@@ -162,21 +162,21 @@ if rank == 0: # If this is the master, start building the GPT2 model
                     print(offset)
                     if worker_num != size - 1:
                         req_Z1 = comm.isend(Z1[:, offset: offset + worker_share, :],
-                                            dest=worker_num + 1,
-                                            tag=worker_num + 1 + DECODER_TAG * i + ZSLICE_TAG * worker_num)  #
+                                            dest=worker_num ,
+                                            tag=worker_num + DECODER_TAG * i + ZSLICE_TAG * worker_num)  #
                         comm.bcast(continue_forward, root=0)
                         # req_continueForwrad = comm.isend(continue_forward, dest=worker_num+1, tag=worker_num+101)
                     else:
                         req_Z1 = comm.isend(Z1[:, offset:, :],
-                                            dest=worker_num + 1,
-                                            tag=worker_num + 1 + DECODER_TAG * i + ZSLICE_TAG * worker_num)  #
+                                            dest=worker_num,
+                                            tag=worker_num + DECODER_TAG * i + ZSLICE_TAG * worker_num)  #
                         comm.bcast(continue_forward, root=0)
                         # req_continueForwrad = comm.isend(continue_forward, dest=worker_num+1, tag=worker_num+101)
 
                 request_list = []
-                for worker_num in range(size):
+                for worker_num in range(1,size):
                     request_list.append(
-                        comm.irecv(source=worker_num, tag=worker_num + 1 + DECODER_TAG * i + ZSLICE_TAG * worker_num))
+                        comm.irecv(source=worker_num, tag=worker_num + DECODER_TAG * i + ZSLICE_TAG * worker_num))
 
                 status = [MPI.Status() for i in range(0, size)]
 

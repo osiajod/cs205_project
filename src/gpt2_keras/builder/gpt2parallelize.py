@@ -286,6 +286,7 @@ class MultiLayerPerceptron(tf.keras.layers.Layer):
                                                     stddev=initializer_range),
                                                 name="projection")
 
+
     def call(self, inputs, dropout=None):
         """
 
@@ -294,7 +295,12 @@ class MultiLayerPerceptron(tf.keras.layers.Layer):
         """
         x = self.layer_norm(inputs)
         x = self.perceptron(x)
+
+        print("shape before projection", np.array(x).shape)
+
         x = self.projection(x)
+        print("shape after projection", np.array(x).shape)
+
         x = dropout_fn(x, dropout)
         return x
 
@@ -306,8 +312,12 @@ class MultiLayerPerceptron(tf.keras.layers.Layer):
 
         config = super(MultiLayerPerceptron, self).get_config()
         config["layer_norm"] = self.layer_norm.weights
-        config["perceptron"] = self.perceptron.weights
+        config["perceptron"] = self.perceptron.weights #(768, 3072)
+        # shape before projection (1, 1, 3072)
         config["projection"] = self.projection.weights
+        # shape after projection (1, 1, 768)
+
+
 
         return config
 

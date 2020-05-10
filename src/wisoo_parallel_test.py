@@ -254,7 +254,7 @@ else: # worker cores  / nodes
         b = mlp["config"]["projection"].pop(0)
         input_ = tf.keras.layers.Input(shape=(3072,))
         temp_projection = tf.keras.layers.Dense(768)
-        projected = temp_perceptron(input_)
+        projected = temp_projection(input_)
         model = tf.keras.Model(inputs=input_, outputs=projected)
         temp_projection.set_weights(np.array([w, b]))
         temp.projection = temp_projection

@@ -97,7 +97,5 @@ def sep_sentences_to_lines(infile, outfile, sep_paragraphs=True):
 
 
 if __name__ == '__main__':
-    fire.Fire({
-        'sep_sentences_to_lines': sep_sentences_to_lines
-    })  
+    fire.Fire(sep_sentences_to_lines)  
 

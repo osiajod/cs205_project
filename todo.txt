@@ -1,3 +1,0 @@
-1. Make code to generate prompts from target texts
-2. Make code to, given a GPT-2, generate text
-3. Integrate code to assess style transfer

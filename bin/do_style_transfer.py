@@ -2,23 +2,26 @@ import fire
 import generators
 from generate_prompts import prompts_generator
 import tqdm
+import tensorflow as tf
+
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 def generate_lines(generator, prompts, gen_length):
     for prompt in prompts:
-        print("prompt:")
+        print("============PROMPT============")
         print(prompt)
         generation = generator.generate(prefix=prompt, length=gen_length)
-        print("generation:")
+        print("============GENERATION============")
         print(generation)
         yield generation
 
 def write(output_file,
           checkpoint_dir,
           prompts_file,
-          window_size=3,
-          step_size=1,
-          maxsentences=1,
-          minsentences=1,
+          window_size=9,
+          step_size=4,
+          maxsentences=4,
+          minsentences=4,
           gen_length=1000,
           run_name=''):
 

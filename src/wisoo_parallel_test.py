@@ -24,6 +24,7 @@ num_decoder = 12
 DECODER_TAG = 1000
 ZSLICE_TAG = 10000
 # !!!!!!!!! UNCOMMENT BELOW WHEN RUNNING ON AWS
+print(size)
 assert size >= 12  # Let us program for the case where each core can get at least one MLP layer each
 
 # (There are 12 MLPs in GPT-2)

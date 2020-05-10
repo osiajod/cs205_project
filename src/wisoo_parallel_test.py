@@ -232,11 +232,11 @@ else: # worker cores  / nodes
                              initializer_range=0.02,
                              name=None
                              )
-        print("printing mlp")
-        print(mlp)
-        temp.layer_norm.weights = mlp["layer_norm"]
-        temp.perceptron.weights = mlp["perceptron"]
-        temp.projection.weights = mlp["projection"]
+        # print("printing mlp")
+        # print(mlp)
+        temp.layer_norm.weights = mlp["config"]["layer_norm"]
+        temp.perceptron.weights = mlp["config"]["perceptron"]
+        temp.projection.weights = mlp["config"]["projection"]
         recon_MLPs.append(temp)
 
 

@@ -197,14 +197,7 @@
       <p>Operating System / Image: Deep Learning Amazon Machine Image (Ubuntu)</p>
 
       <h4> Usage Instructions </h4>
-      <p> The following are the usage instructions for <b>text generation:</b> </p>
-      <ol>
-      <li> Given the metadata file obtained from pgcorpus, to obtain the distribution of subjects: <code>python ./bin/parse_metadata.py generate_subjects --infile "./data/metadata.csv.gz" --outfile "./data/subjects.csv"</code> </li>
-      <li> Given the metadata file and a subject, to get the works that correspond to that subject (for example, juvenile): <code>python ./bin/parse_metadata.py get_subject_records --search_phrase "juvenile" --infile "./data/metadata.csv.gz" --outfile "./data/juvenile.csv"</code> </li>
-      <li> Given the zipped output of pgcorpus and a csv file derived from metadata.csv (see juvenile.csv above), obtain a compressed file consisting only of those works: <code>python ./bin/make_gutenberg_subset.py --genre_file "./data/juvenile.csv" --pg_raw "./data/project_gutenberg_raw.zip" --out_zip "./data/juvenile.zip"</code> </li>
-      <li> To separate the sentences in a target text file into newlines: <code>python ./bin/generate_prompts.py --infile "./data/target_texts/the_circular_ruins.txt" --outfile "./data/target_texts/the_circular_ruins_lines.txt"</code> </li>
-      <li> Given a pre-trained GPT-2, generate text using the sliding window approach: <code>python ./bin/do_style_transfer.py --output_file ./output/juv_1500_cr_9_4 --checkpoint_dir /home/msdowns/cs205_project/data/checkpoint/juvenile_gen1/1500/ --prompts_file "./data/target_texts/the_circular_ruins_lines.txt"</code> </li>
-      </ol> 
+     
 
       <p> The following are the usage instructions for parallel training on a single-node and multi-nodes: </p>
       <p> <b>Single-node:</b> </p>
@@ -231,6 +224,16 @@
       <li> Change the path argument given to the “--dataset” flag in the train_horovod.sh file to the absolute path to your .npz training file. You may also change the other options as mentioned in the single-node parallelism case, if you wish.</li>
       <li>Finally, simply enter the command <code>./train_horovod.sh 4</code> to train the model in parallel on the four GPU nodes. To train on a different number, simply change the “4" in this command to the number of nodes on which you wish to train (up to the limit imposed by the number of nodes you have configured). This should commence the training and output the epochs and loss to your terminal. It will save checkpoints at the intervals you have specified, and also save a checkpoint when you stop training using Ctrl+C. You can use these saved models to generate text, as is specified further below on this webpage. Be sure to stop your AWS EC2 instance once you are finished to avoid unwanted charges.</li>
     </ol>
+
+ <p> The following are the usage instructions for <b>text generation:</b> </p>
+      <ol>
+      <li> Given the metadata file obtained from pgcorpus, to obtain the distribution of subjects: <code>python ./bin/parse_metadata.py generate_subjects --infile "./data/metadata.csv.gz" --outfile "./data/subjects.csv"</code> </li>
+      <li> Given the metadata file and a subject, to get the works that correspond to that subject (for example, juvenile): <code>python ./bin/parse_metadata.py get_subject_records --search_phrase "juvenile" --infile "./data/metadata.csv.gz" --outfile "./data/juvenile.csv"</code> </li>
+      <li> Given the zipped output of pgcorpus and a csv file derived from metadata.csv (see juvenile.csv above), obtain a compressed file consisting only of those works: <code>python ./bin/make_gutenberg_subset.py --genre_file "./data/juvenile.csv" --pg_raw "./data/project_gutenberg_raw.zip" --out_zip "./data/juvenile.zip"</code> </li>
+      <li> To separate the sentences in a target text file into newlines: <code>python ./bin/generate_prompts.py --infile "./data/target_texts/the_circular_ruins.txt" --outfile "./data/target_texts/the_circular_ruins_lines.txt"</code> </li>
+      <li> Given a pre-trained GPT-2, generate text using the sliding window approach: <code>python ./bin/do_style_transfer.py --output_file ./output/juv_1500_cr_9_4 --checkpoint_dir /home/msdowns/cs205_project/data/checkpoint/juvenile_gen1/1500/ --prompts_file "./data/target_texts/the_circular_ruins_lines.txt"</code> </li>
+      </ol> 
+
     <h4> Text Generation</h4>
     <p> This the process of generating new text from our corpus of data outlined in above sections. The algorithm for generating text takes as input a pre-trained GPT-2 and a text file. The text file is chunked into contiguous groups of sentences which are used as prompts for GPT-2. The contiguous group is then shifted by some step size. For this project, the chunk/window size was <b>9</b> and the step size was <b>4</b>. 4 sentences were generated at a time using GPT-2. We used nltk as the sentence tokenizer. A diagram showing this algorithm is shown below: </p>
       <div class="jumbotron center" >

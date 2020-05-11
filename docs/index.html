@@ -167,10 +167,6 @@
       <p>From line 56 to line 61, the master process serializes the decoder blocks' MultiLayerPerceptron instances. Then, in line 64, the serialized MLPs are broadcast to all the nodes using OpenMPI (mpi4py).</p>
       <img class="img-responsive" src="./img/modelpara2.png" class="center-block img-responsive" height=300px>
       <p>The worker nodes selectively reconstruct the MLP portion of the decoder blocks and receive partitioned attention-weighted matrices from the master node. The workers execute forward runs and project the results back to the embedding dimensions. Finally, they report the results back to the master process. More details can be found in /src/parallel_test.py. </p>
-      <p>The code can be run with the following commands: </p>
-      <p>"cd src"</p>
-      <p>"mpiexec -n 13 python -m mpi4py ./parallel_test.py"</p>
-      <p>Because the program assumes that each process is allocated a decoder block, 'numprocs' has to be a number larger than 12.</p>
       
 
       <h4> Dependencies </h4>

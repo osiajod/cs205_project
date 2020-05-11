@@ -111,17 +111,12 @@
 
       <img src="./img/gpt2-decoders.png" class="center-block img-responsive" height=500px>
 
-
-      <p> In describing our model for textual style transfer, we will also describe the process of generating new text from our corpus of data outlined above. The algorithm for generating text takes as input a pre-trained GPT-2 and a text file. The text file is chunked into contiguous groups of sentences which are used as prompts for GPT-2. The contiguous group is then shifted by some step size. For this project, the chunk/window size was <b>9</b> and the step size was <b>4</b>. 4 sentences were generated at a time using GPT-2. We used nltk as the sentence tokenizer. A diagram showing this algorithm is shown below: </p>
-      <div class="jumbotron center" >
-      <img src="./img/generating_text.png" class="img-responsive center-block" width=900px>
-    </div>
       <a class="anchor" id="4"></a>
       <div class="page-header">
         <h2>4. Technical description of the parallel application, programming models, platform and infrastructure</h2>
       </div>
       <h4> Parallel Application </h4>
-      <p> Our parallel application involves exploiting a range of different parallelism levels including many-node and many-core parallelism as we used multiple GPUs on a single node and as well as multiple single-GPU nodes. There are two main areas that are possible to parallelize: the training phase and the generation phase.</p>
+      <p> Our parallel application involves exploiting a range of different parallelism levels including many-node and many-core parallelism as we used multiple GPUs on a single-node and as well as multiple single-GPU nodes. There are two main areas that are possible to parallelize: the training phase and the generation phase.</p>
       <p>  We chose to parallelize the training phase of our project: the transformer computations and gradient updates in GPT-2 fine-tuning will be parallelized.</p>
       <h4> Programming Model</h4>
       <p> In deciding on the proper model for <b>data parallelism</b>, we used the ring all-reduce algorithm via Horovod that utilizes open MPI. Compared to the alternative of distributed tensorflow's worker-parameter server model, Horovod's ring all-reduce algorithm is superior in terms of reducing network bandwith bottleneck due to the absence of the need for a parameter server. An overview of this parallel algorithm is shown below. </p>
@@ -182,7 +177,7 @@
       <ul>
       <li> python=3.7 </li>
       <li> numpy </li>
-      <li> tensorflow==2.0.0 </li>
+      <li> tensorflow==1.15 </li>
       <li> keras </li>
       <li> horovod </li>
       <li> re </li>
@@ -216,7 +211,7 @@
       </ol> 
 
       <p> The following are the usage instructions for parallel training on a single-node and multi-nodes: </p>
-      <p> <b>Single node:</b> </p>
+      <p> <b>Single-node:</b> </p>
       <ol>
       <li> Launch a g4dn.12xlarge instance (which has 4 GPUs) using AWS’ EC2 service. When doing so, launch the instance using the Ubuntu 16.04 Deep Learning Amazon Machine Image (DLAMI) </li>
       <li> Once the instance has launched, clone the “singlenode_parallelism” folder from the project repo into the newly-created instance </li>
@@ -227,8 +222,10 @@
       <li> To train the model (still in the src directory), run the command below, replacing the “4" in <code>-np 4 -H localhost:4</code> with the number of GPUs you want to use, and replacing the dataset with your dataset, as well as substituting your own run name for the <code>-run_name</code> flag. The </code>fresh</code> argument here ensures that each time we retrain, we start from the same base GPT-2 model. You may also alter the flags associated with saving and sampling as you would like. 
       <pre><code>python mpirun -np 4 -H localhost:4 -bind-to none -map-by slot -x NCCL_DEBUG=INFO -x LD_LIBRARY_PATH -x PATH -x PYTHONPATH=src -mca pml ob1 -mca btl ^openib train-horovod.py --dataset foldername.npz --restore_from fresh --run_name my_name --sample_every 100 --save_every 100</code></pre>  </li>
       <li> This should commence the training and output the epochs and loss to your terminal. It will save checkpoints at the intervals you have specified, and also save a checkpoint when you stop training using Ctrl+C. You can use these saved models to generate text, as is specified further below on this webpage. Be sure to stop your AWS EC2 instance once you are finished to avoid unwanted charges.</li>
+    </ol>
 
       <p> <b>Multi node</b> (training the 117 million-parameter GPT2 model multi-node parallelism): </p>
+      <ol>
       <li> Launch four g4dn.xlarge instances (each has one GPU) using AWS’ EC2 service. When doing so, launch the instances using the Ubuntu 16.04 Deep Learning Amazon Machine Image (DLAMI). </li>
       <li> Configure them in a virtual private cluster (VPC) using the instructions outlined in Lab I7. For our tests (and due to AWS VCPU limits), we used a single master nodes and three worker nodes. </li>
       <li> Once you have launched the instances and configured the VPC, clone the <code>multinode_parallelism</code> folder from the project repo into the NFS (corresponding to “cloud” in the lab) to which the master and all nodes have access. </li>
@@ -237,13 +234,19 @@
       <li> Navigate to the directory that simply contains the src directory – in this case, you do not have to enter the src directory, as we have copied the relevant files up one level.</li>
       <li> Change the path argument given to the “--dataset” flag in the train_horovod.sh file to the absolute path to your .npz training file. You may also change the other options as mentioned in the single-node parallelism case, if you wish.</li>
       <li>Finally, simply enter the command <code>./train_horovod.sh 4</code> to train the model in parallel on the four GPU nodes. To train on a different number, simply change the “4" in this command to the number of nodes on which you wish to train (up to the limit imposed by the number of nodes you have configured). This should commence the training and output the epochs and loss to your terminal. It will save checkpoints at the intervals you have specified, and also save a checkpoint when you stop training using Ctrl+C. You can use these saved models to generate text, as is specified further below on this webpage. Be sure to stop your AWS EC2 instance once you are finished to avoid unwanted charges.</li>
+    </ol>
+    <h4> Text Generation</h4>
+    <p> This the process of generating new text from our corpus of data outlined in above sections. The algorithm for generating text takes as input a pre-trained GPT-2 and a text file. The text file is chunked into contiguous groups of sentences which are used as prompts for GPT-2. The contiguous group is then shifted by some step size. For this project, the chunk/window size was <b>9</b> and the step size was <b>4</b>. 4 sentences were generated at a time using GPT-2. We used nltk as the sentence tokenizer. A diagram showing this algorithm is shown below: </p>
+      <div class="jumbotron center" >
+      <img src="./img/generating_text.png" class="img-responsive center-block" width=900px>
+    </div>
 
       <a class="anchor" id="7"></a>
       <div class="page-header">
         <h2>7. Performance evaluation (speed-up, throughput, weak and strong scaling) and discussion about overheads and optimizations done</h2>
       </div>
       <h4> Speedup/Scaling </h4>
-      <p> As mentioned above, we ran our parallel model on an AWS EC2 g4dn.12xlarge instance. This model had 4 Nvidia T4 Tensor Core GPUs, which allowed us to test and exploit parallelism in our code. As a baseline, we first ran our code on a single node and increased the number of processes on that node. Afterwards, we plot the multinode parallel results of our code. Instead of varying the number of processes on each node, we now vary the number of nodes for our training phase. As the means of comparison, we plot the metric of <b>Loss vs Time Taken</b> for the training phase of our code. This gives us an idea of how quickly we are able to achieve a desired level of accuracy with our different experimental setups. We present our plots for this on Zothique and Juvenile below: </p>
+      <p> As mentioned above, we ran our parallel model on an AWS EC2 g4dn.12xlarge instance. This model had 4 Nvidia T4 Tensor Core GPUs, which allowed us to test and exploit parallelism in our code. As a baseline, we first ran our code on a single-node and increased the number of processes on that node. Afterwards, we plot the multinode parallel results of our code. Instead of varying the number of processes on each node, we now vary the number of nodes for our training phase. As the means of comparison, we plot the metric of <b>Loss vs Time Taken</b> for the training phase of our code. This gives us an idea of how quickly we are able to achieve a desired level of accuracy with our different experimental setups. We present our plots for this on Zothique and Juvenile below: </p>
 
         <div class="row">
             <div class="col-md-6">
@@ -256,7 +259,7 @@
         <br/>
 
       <br/>
-      <p> We also include a table to highlight the speed-up results from our experiments on both a single node and multi-node system on the Juvenile dataset.</p>
+      <p> We also include a table to highlight the speed-up results from our experiments on both a single-node and multi-node system on the Juvenile dataset.</p>
 
       <img class="center-block img-responsive" src="./img/speedup.png" alt="speedup">
 
@@ -296,7 +299,7 @@
         <h2>9. Final discussion about goals achieved, improvements suggested, lessons learnt, future work, interesting insights</h2>
       </div>
       <h4> Goals Achieved</h4>
-      <p> In our project, we have achieved most of the goals that we set out to achieve. We ran our parallel application for textual style transfer on both a single node as well as a multi-node system. We have also investigated how model's training scales with different number of nodes and processes. This led us to interesting findings about the disadvantages of Horovod in data-intensive applications. In this project, we have also shown the use of the novel parallel programming model of Horovod's Ring-all-reduce algorithm on an AWS EC2 cluster.</p>
+      <p> In our project, we have achieved most of the goals that we set out to achieve. We ran our parallel application for textual style transfer on both a single-node as well as a multi-node system. We have also investigated how model's training scales with different number of nodes and processes. This led us to interesting findings about the disadvantages of Horovod in data-intensive applications. In this project, we have also shown the use of the novel parallel programming model of Horovod's Ring-all-reduce algorithm on an AWS EC2 cluster.</p>
 
 
       <h4> Lessons learnt/interesting insights/challenges with running Horovod on Harvard Cannon </h4>

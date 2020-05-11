@@ -84,20 +84,20 @@
         <h2>1. Description of problem and the need for HPC and/or Big Data</h2>
       </div>
       <h4> Problem </h4>
-      <p> In our project, we will be exploring the problem of Textual Style Transfer with GPT-2. Two facets of any written work are style and content. <em>Content</em> pertains to the events or ideas being described whilst <em>Style</em> pertains to the manner in which the events or ideas are being described. Different authors and/or mediums have different styles. Textual style transfer aims to modify the style of one work to mimic the style of another while keeping the content relevant to the original. We will be using the GPT-2 model developed by OpenAI to perform textual style transfer on diverse and large datasets. </p>
+      <p> In our project, we will be exploring the problem of Textual Style Transfer with GPT-2. Two facets of any written work are style and content. <em>Content</em> pertains to the events or ideas being described whilst <em>Style</em> pertains to the manner in which the events or ideas are being described. Different authors and/or mediums have different styles. Textual style transfer aims to modify the style of one work to mimic the style of another while keeping the content relevant to the original.  We will be using the GPT-2 model developed by OpenAI to perform textual style transfer on diverse and large datasets. As the field of textual style transfer is still very nascent, our approach is naive and has no formal mechanism to preserve the content of the original text. </p>
       <h4> Need for HPC and Big Data </h4>
-      <p> There is a need for both big compute and big data processing in our project. On the <b>Big Compute</b> front, we will need a lot of compute resources to train the GPT-2 model for textural style transfer. GPT-2 comes in various sizes and all have a significant number of parameters to train. The "small" model that we are working with has 117 million parameters to train and our rough time estimate shows that we require 6 hours on single GPU to get reasonable (conditional) initial results using 7MB of text and 33k iterations. HPC will allow us to speed this up. </p>
+      <p> There is a need for big compute in our project. On the <b>Big Compute</b> front, we will need a lot of compute resources to train the GPT-2 model for textural style transfer. GPT-2 comes in various sizes and all have a significant number of parameters to train. The "small" model that we are working with has 117 million parameters to train and our rough time estimate shows that we require 6 hours on single GPU to get reasonable (conditional) initial results using 7MB of text and 33k iterations. HPC will allow us to speed this up. </p>
 
-      <p>On the <b>Big Data</b> front, the original GPT-2 model is originally trained with 40GB of internet text which includes WebText. Other common textual datasets includes WikiText, which contains 100 million tokens from verified “good” and “featured” Wikipedia articles as well as Treebank-2 which contains 1 million tokens from WSJ articles. The large sizes of these textual datasets implies a clear for Big Data processing to handle this problem.</p> 
+      <p>On a tangent <b>Big Data</b> front, the original GPT-2 model is originally trained with 40GB of internet text which includes WebText. Other common textual datasets includes WikiText, which contains 100 million tokens from verified “good” and “featured” Wikipedia articles as well as Treebank-2 which contains 1 million tokens from WSJ articles. In our project, we did not require the use of these "Big Data" datasets and stayed within the realms of gigabytes with our chosen datasets.</p> 
 
       <a class="anchor" id="2"></a>
       <div class="page-header">
         <h2>2. Description of solution and comparison with existing work on the problem</h2>
       </div>
-      <h4> OpenAI existing work </h4>
+      <h4> OpenAI Existing Work </h4>
       <p> In scoping the existing work on this problem, we refer to the paper and associated codebase written by OpenAI linked <a href = https://openai.com/blog/better-language-models/>here</a>. OpenAI provides the GPT-2 model architecture that they tested for various different Natural Language Processing (NLP) tasks. In their paper, they outlined their efforts in using the model for zero-shot reading comprehension, summarization, translation and question answering. However, they do not outline the effectiveness of the model on Textual Style Transfer</p>
-      <h4> Our solution </h4>
-      <p> In our project, we will be using the original GPT-2 117 million parameter model to perform textual style transfer from a source text to a target text. Our solution involves re-training this huge model in order to do textual style transfer. Lastly in comparison with the original GPT-2 model, our solution will also train the parameters in parallel which we will further elaborate in our technical descriptions below. Overall, we find that our project is novel compared to existing work done in the field and contributed to interesting findings which we describe in the sections below. </p>
+      <h4> Our Solution </h4>
+      <p> In our project, we will be using the original GPT-2 117 million parameter model to perform textual style transfer from a source text to a target text. Our solution involves re-training this huge model in order to do textual style transfer. Our solution will also train the parameters in parallel which we will further elaborate in our technical descriptions below. Overall, we find that our application of GPT-2 is largely novel compared to existing work done in the field and contributed to interesting findings which we describe in the sections below. </p>
 
       <a class="anchor" id="3"></a>
       <div class="page-header">
@@ -112,19 +112,21 @@
       <img src="./img/gpt2-decoders.png" class="center-block img-responsive" height=500px>
 
 
-      <p> In describing our model for textual style transfer, we will also describe the process of generating new text from our corpus of data outlined above. The algorithm for generating text takes as input a pre-trained GPT-2 and a text file. The text file is chunked into contiguous groups of sentences which are used as prompts for GPT-2. The contiguous group is then shifted by some step size. For this project, the chunk/window size was <b>9</b> and the step size was <b>4</b>. 4 sentences were generated at a time using GPT-2. We used nltk as the sentence tokenizer. </p>
-
+      <p> In describing our model for textual style transfer, we will also describe the process of generating new text from our corpus of data outlined above. The algorithm for generating text takes as input a pre-trained GPT-2 and a text file. The text file is chunked into contiguous groups of sentences which are used as prompts for GPT-2. The contiguous group is then shifted by some step size. For this project, the chunk/window size was <b>9</b> and the step size was <b>4</b>. 4 sentences were generated at a time using GPT-2. We used nltk as the sentence tokenizer. A diagram showing this algorithm is shown below: </p>
+      <div class="jumbotron center" >
+      <img src="./img/generating_text.png" class="img-responsive center-block" width=900px>
+    </div>
       <a class="anchor" id="4"></a>
       <div class="page-header">
         <h2>4. Technical description of the parallel application, programming models, platform and infrastructure</h2>
       </div>
       <h4> Parallel Application </h4>
-      <p> Our parallel application involves exploiting a range of different parallelism levels including many-node and many-core parallelism as we used multiple GPUs on multiple nodes. There are two main areas to parallelize: the training phase and the generation phase. </p>
-      <p> In the training phase of our project, the transformer computations and gradient updates in GPT-2 fine-tuning will be parallelized. In the generation phase, we will be parallelizing the feedforward process of the input source file. </p>
+      <p> Our parallel application involves exploiting a range of different parallelism levels including many-node and many-core parallelism as we used multiple GPUs on a single node and as well as multiple single-GPU nodes. There are two main areas that are possible to parallelize: the training phase and the generation phase.</p>
+      <p>  We chose to parallelize the training phase of our project: the transformer computations and gradient updates in GPT-2 fine-tuning will be parallelized.</p>
       <h4> Programming Model</h4>
       <p> In deciding on the proper model for <b>data parallelism</b>, we used the ring all-reduce algorithm via Horovod that utilizes open MPI. Compared to the alternative of distributed tensorflow's worker-parameter server model, Horovod's ring all-reduce algorithm is superior in terms of reducing network bandwith bottleneck due to the absence of the need for a parameter server. An overview of this parallel algorithm is shown below. </p>
 
-      <img class="img-responsive" src="./img/ringallreduce.png" class="center-block" width=1000px>
+      <img  src="./img/ringallreduce.png" class="img-responsive center-block" width=1000px>
       <p> On the other hand, we also explored the possibility of <b>model parallelism</b> by exploiting the transformer architecture. A key property of gpt-2 is that in the decoder blocks, the input word in each position flows through its own path. Up to the self-attention layer, there exist positional dependencies between embedded word vectors, but the inputs to the feed-forward layer do not have those dependencies. Thus, the each of the paths that the attention-weighted vectors take can be executed in parallel while flowing through the feed-forward layer and the projection layer. It follows from this observation that we define ‘c’ in Amdahl’s law to be the ratio of the parameters in the feedforward neural network of each encoder multiplied by the number of encoders in the GPT-2. In case of the smallest GPT-2 model, we have 28.3 million parameters that can be updated in parallel. This is about 23% of the total number of parameters in GPT-2. Even more promising is the fact that the bigger versions of GPT-2 differ mostly in the number of Decoder stacks, meaning the parallelizable portion only increases with bigger models.</p>
       <h4>Platform and Infrastructure </h4>
       <p> Our language of choice will be Python which allows us to access a wide range of different libraries for our project. Our machine learning framework used is Tensorflow and Keras as well as Horovod as mentioned above. Our platform operating system used is Deep Learning Amazon Machine Image (Ubuntu) which came with Tensorflow and Horovod pre-configured. Our infrastructure of choice is Amazon's Elastic Compute 2 (EC2). Originally, we planned to use Harvard's FAS Cannon supercomputer as well but had issues with the parallel implementation which we will outline later. For the single-node training on AWS, we used the g4dn.12xlarge EC2 instance. This instance has four GPUs, each with 16GB of memory. For the multinode training, we used four g4dn.xlarge instances, which each have one GPU with 16GB of memory. To do so, we established a virtual private cluster (VPC) using the process outlined in <a href="https://harvard-iacs.github.io/2020-CS205/lab/I7/guide/Guide_I7.pdf">Lab 7</a>. In line with the lab, we configured a NFS (Network File System) so the master could export a directory to which the client mounts in order to exchange data. Since the instances we employed are both members of AWS’ G4 family of instances, the GPUs they use are NVIDIA T4 Tensor Core GPUs. These decisions were motivated by a need for increased GPU memory on the one hand, and AWS’ VCPU limits on the other. </p>
@@ -134,7 +136,7 @@
         <h2>5. Links to repository with source code, evaluation data sets and test cases</h2>
       </div>
       <h4> Source Code </h4>
-      <p> Our entire codebase for this project is hosted on our team's github repository linked <a href=https://github.com/osiajod/cs205_project>here</a>. In that repository, we have also linked a folder titled <u>results</u> which contain our outputs from training our GPT-2 model on a variety of different nodes on AWS. These outputs allow us to better understand the accuracy and speed of scaling of GPT-2 which we will present in the plots below. We have also included several style-transfered texts that our generated from our trained GPT-2 model located under the <u>style_transferred</u> folder. The target texts for style transfer are a wikipedia article on MC Escher, a news article on hurricanes in the gulf of Mexico, and a short story by jorge luis borges. The filenames follow the following naming convention <u>style_numepochs_target_window_step</u>. For example: 19th_1200_escher_9_4. These style transfered texts are how we qualitatively evaluated the effectiveness of our model in performing the textual style transfer. As an example, here is an excerpt taken from <u>juv_900_hurricance_9_4</u>. </p>
+      <p> Our entire codebase for this project is hosted on our team's github repository linked <a href=https://github.com/osiajod/cs205_project>here</a>. In that repository, we have also linked a folder titled <u>results</u> which contain our outputs from training our GPT-2 model on a variety of different nodes on AWS. These outputs allow us to better understand the accuracy and speed of scaling of GPT-2 which we will present in the plots below. We have also included several style-transfered texts that our generated from our trained GPT-2 model located under the <u>style_transferred</u> folder. The target texts for style transfer are a Wikipedia article on MC Escher, a news article on hurricanes in the Gulf of Mexico, and a short story by Jorge Luis Borges. The filenames follow the following naming convention <u>style_numepochs_target_window_step</u>. For example: 19th_1200_escher_9_4. These style transfered texts are how we qualitatively evaluated the effectiveness of our model in performing the textual style transfer. As an example, here is an excerpt taken from <u>juv_900_hurricance_9_4</u>. </p>
       <blockquote class="blockquote">
       <p class="mb-0">
       May is the country in which most of these men in America travel in the late-season and in a level sense of the country, so strong an effort to move across to reinforce new shipping during the autumn will appear with gaining strength at extreme hours when both men are already together. Thus far only, that time before the 1915 sick-leave of the African coast of Mexico has been fostering with the passage between San Diego and the Rio Guayana Warinar region.
@@ -150,13 +152,15 @@
       <footer class="blockquote-footer">Excerpt from zothique_500_hurricane_9_4</footer>
       </blockquote>
 
+      <p>The reader will notice a clear narrative difference between the two samples, despite being generated using the same base hurricane article. For example, the “juvenile” sample uses simpler sentence structures, shorter words and a more matter-of-fact tone On the other hand, the “Zothique” sample is replete with fantastical, ominous descriptions, more complex structures, and a more inventive style overall.</p>
+
       <p> During our training phase, we will be timing our training of GPT-2 on two different sources of text from Eldritchdark and Project Gutenberg. We will be using the Zothique text as well as the Juvenile text. The Zothique text represents the smallest source of text (201Kb zipped) available on Project Gutenberg whilst the Juvenile text represents the largest source of text (484Mb zipped). Using this spectrum of sizes allows us to better appreciate the performance of our model outlined in <a href="#7">Section 7</a> below. </p>
 
       <a class="anchor" id="6"></a>
       <div class="page-header">
         <h2>6. Technical description of the software design, code baseline, dependencies, how to use the code, and system and environment needed to reproduce your tests</h2>
       </div>
-      <h4> Software design </h4>
+      <h4> Software Design </h4>
       <p> <b>Data Parallelism </b></p>
         <p> Since data parallelism is explained in detail in section 4, section 8 and owes a lot to the implementations of Horovod library, we elaborate on the software designs relevant to the model parallelism.</p>
       <p> <b>Model Parallelism </b></p>
@@ -181,24 +185,65 @@
       <li> tensorflow==2.0.0 </li>
       <li> keras </li>
       <li> horovod </li>
-      <li> regex </li>
       <li> re </li>
       <li> mpi4py </li>
       <li> nltk </li>
       <li> json </li>
       <li> pickle </li>
+      <li>fire==0.3.1 </li>
+      <li>gpt-2-simple==0.7.1 </li>
+      <li>pandas==1.0.3 </li>
+      <li>pytz==2019.3 </li>
+      <li>regex==2020.4.4 </li>
+      <li>tqdm==4.45.0 </li>
+      <li>requests==2.21.0</li>
+      <li>toposort==1.5</li>
+      <li>tensorflow-gpu==1.15.2</li>
       </ul> 
 
-      <h4> System and Evironment </h4>
+      <h4> System and Environment </h4>
       <p>AWS instance: The g4dn.12xlarge</p>
       <p>Operating System / Image: Deep Learning Amazon Machine Image (Ubuntu)</p>
+
+      <h4> Usage Instructions </h4>
+      <p> The following are the usage instructions for <b>text generation:</b> </p>
+      <ol>
+      <li> Given the metadata file obtained from pgcorpus, to obtain the distribution of subjects: <code>python ./bin/parse_metadata.py generate_subjects --infile "./data/metadata.csv.gz" --outfile "./data/subjects.csv"</code> </li>
+      <li> Given the metadata file and a subject, to get the works that correspond to that subject (for example, juvenile): <code>python ./bin/parse_metadata.py get_subject_records --search_phrase "juvenile" --infile "./data/metadata.csv.gz" --outfile "./data/juvenile.csv"</code> </li>
+      <li> Given the zipped output of pgcorpus and a csv file derived from metadata.csv (see juvenile.csv above), obtain a compressed file consisting only of those works: <code>python ./bin/make_gutenberg_subset.py --genre_file "./data/juvenile.csv" --pg_raw "./data/project_gutenberg_raw.zip" --out_zip "./data/juvenile.zip"</code> </li>
+      <li> To separate the sentences in a target text file into newlines: <code>python ./bin/generate_prompts.py --infile "./data/target_texts/the_circular_ruins.txt" --outfile "./data/target_texts/the_circular_ruins_lines.txt"</code> </li>
+      <li> Given a pre-trained GPT-2, generate text using the sliding window approach: <code>python ./bin/do_style_transfer.py --output_file ./output/juv_1500_cr_9_4 --checkpoint_dir /home/msdowns/cs205_project/data/checkpoint/juvenile_gen1/1500/ --prompts_file "./data/target_texts/the_circular_ruins_lines.txt"</code> </li>
+      </ol> 
+
+      <p> The following are the usage instructions for parallel training on a single-node and multi-nodes: </p>
+      <p> <b>Single node:</b> </p>
+      <ol>
+      <li> Launch a g4dn.12xlarge instance (which has 4 GPUs) using AWS’ EC2 service. When doing so, launch the instance using the Ubuntu 16.04 Deep Learning Amazon Machine Image (DLAMI) </li>
+      <li> Once the instance has launched, clone the “singlenode_parallelism” folder from the project repo into the newly-created instance </li>
+      <li>  Activate the “tensorflow_p36" Conda environment that comes with the DLAMI – this should be as simple as running the command `source activate tensorflow_p36` </li>
+      <li> Install the necessary packages using the command <code>pip install -r requirements.txt</code> </li>
+      <li> Download the model run the command <code>python download_model.py 117M</code> in the same directory </li>
+      <li> Now you are ready to encode your dataset. Navigate to the src directory, and make sure you have your raw text data in .txt files in a folder in the src directory. To generate the training data, run the command <code>python encode.py foldername foldername.npz</code> where “foldername” is the name of the folder where you have stored your .txt files of retraining data </li>
+      <li> To train the model (still in the src directory), run the command below, replacing the “4" in <code>-np 4 -H localhost:4</code> with the number of GPUs you want to use, and replacing the dataset with your dataset, as well as substituting your own run name for the <code>-run_name</code> flag. The </code>fresh</code> argument here ensures that each time we retrain, we start from the same base GPT-2 model. You may also alter the flags associated with saving and sampling as you would like. 
+      <pre><code>python mpirun -np 4 -H localhost:4 -bind-to none -map-by slot -x NCCL_DEBUG=INFO -x LD_LIBRARY_PATH -x PATH -x PYTHONPATH=src -mca pml ob1 -mca btl ^openib train-horovod.py --dataset foldername.npz --restore_from fresh --run_name my_name --sample_every 100 --save_every 100</code></pre>  </li>
+      <li> This should commence the training and output the epochs and loss to your terminal. It will save checkpoints at the intervals you have specified, and also save a checkpoint when you stop training using Ctrl+C. You can use these saved models to generate text, as is specified further below on this webpage. Be sure to stop your AWS EC2 instance once you are finished to avoid unwanted charges.</li>
+
+      <p> <b>Multi node</b> (training the 117 million-parameter GPT2 model multi-node parallelism): </p>
+      <li> Launch four g4dn.xlarge instances (each has one GPU) using AWS’ EC2 service. When doing so, launch the instances using the Ubuntu 16.04 Deep Learning Amazon Machine Image (DLAMI). </li>
+      <li> Configure them in a virtual private cluster (VPC) using the instructions outlined in Lab I7. For our tests (and due to AWS VCPU limits), we used a single master nodes and three worker nodes. </li>
+      <li> Once you have launched the instances and configured the VPC, clone the <code>multinode_parallelism</code> folder from the project repo into the NFS (corresponding to “cloud” in the lab) to which the master and all nodes have access. </li>
+      <li> On each instance, activate the “tensorflow_p36" Conda environment that comes with the DLAMI and install the necessary packages using the command <code>pip install -r requirements.txt</code> </li>
+      <li> Follow the procedure as outlined above to download the model and generate the .npz encoding of your raw .txt training data. </li>
+      <li> Navigate to the directory that simply contains the src directory – in this case, you do not have to enter the src directory, as we have copied the relevant files up one level.</li>
+      <li> Change the path argument given to the “--dataset” flag in the train_horovod.sh file to the absolute path to your .npz training file. You may also change the other options as mentioned in the single-node parallelism case, if you wish.</li>
+      <li>Finally, simply enter the command <code>./train_horovod.sh 4</code> to train the model in parallel on the four GPU nodes. To train on a different number, simply change the “4" in this command to the number of nodes on which you wish to train (up to the limit imposed by the number of nodes you have configured). This should commence the training and output the epochs and loss to your terminal. It will save checkpoints at the intervals you have specified, and also save a checkpoint when you stop training using Ctrl+C. You can use these saved models to generate text, as is specified further below on this webpage. Be sure to stop your AWS EC2 instance once you are finished to avoid unwanted charges.</li>
 
       <a class="anchor" id="7"></a>
       <div class="page-header">
         <h2>7. Performance evaluation (speed-up, throughput, weak and strong scaling) and discussion about overheads and optimizations done</h2>
       </div>
       <h4> Speedup/Scaling </h4>
-      <p> As mentioned above, we ran our parallel model on an AWS EC2 g4dn.12xlarge instance. This model had 4 Nvidia T4 Tensor Core GPUs, which allowed us to test and exploit parallelism in our code. As a baseline, we first ran our code on a single node and increased the number of processes on that node. Afterwards, we plot the multinode parallel results of our code. Instead of varying the number of processes on each node, we now vary the number of nodes for our training phase. As the means of comparison, we plot the metric of <b>Loss vs Time Taken</b> for the training phase of our code. This gives us an idea of how quickly we are able to achieve a desired level of accuracy with our different experimental setupsWe present our plots for this on Zothique and Juvenile below: </p>
+      <p> As mentioned above, we ran our parallel model on an AWS EC2 g4dn.12xlarge instance. This model had 4 Nvidia T4 Tensor Core GPUs, which allowed us to test and exploit parallelism in our code. As a baseline, we first ran our code on a single node and increased the number of processes on that node. Afterwards, we plot the multinode parallel results of our code. Instead of varying the number of processes on each node, we now vary the number of nodes for our training phase. As the means of comparison, we plot the metric of <b>Loss vs Time Taken</b> for the training phase of our code. This gives us an idea of how quickly we are able to achieve a desired level of accuracy with our different experimental setups. We present our plots for this on Zothique and Juvenile below: </p>
 
         <div class="row">
             <div class="col-md-6">
@@ -211,14 +256,19 @@
         <br/>
 
       <br/>
-      <h4>Discussion of Overheads and Optimizations done</h4>
-      <p>By both varying the problem size and number of nodes, we have shown the weak and strong scaling for our parallel application. As expected, running our code in parallel allowed us to speed-up our training process in achieving lower training errors in a shorter period of time. Interestingly, our multi-node case is slower than our single-node case for the same amount of overall processes. In comparing the two plots, there is almost a 2x slowdown when comparing the time needed to perform training on the Juvenile and Zotique datasets when 4 nodes/processes are involved (to achieve similar training accuracies). This implies that there is significant overheads for our multi-node experiment compared to our single-node experiment. Upon further research investigation, we noticed that the communication costs for our application is immense. As supported by this article <a href = "https://timdettmers.com/2014/10/09/deep-learning-data-parallelism/">here</a>, data parallelism does not yield a good result due to the amount of data that needs to be passed around the nodes. During each backward pass of our training phase, we need to broadcast all gradient values to all other GPUs. With <b> 117 million parameters</b> to train in our smallest example of GPT-2, this represents a huge amount of communication overhead which outweights the computational benefit that we got from scaling the number of processors. 
+      <p> We also include a table to highlight the speed-up results from our experiments on both a single node and multi-node system on the Juvenile dataset.</p>
+
+      <img class="center-block img-responsive" src="./img/speedup.png" alt="speedup">
+
+
+      <h4>Discussion of Overheads and Optimizations</h4>
+      <p>By both varying the problem size and number of nodes, we have shown the weak and strong scaling for our parallel application. As expected, running our code in parallel allowed us to speed-up our training process in achieving lower training errors in a shorter period of time. Interestingly, our multi-node case is slower than our single-node case for the same amount of overall processes. In comparing the two plots, there is almost a 2x slowdown when comparing the time needed to perform training on the Juvenile and Zotique datasets when 4 nodes/processes are involved (to achieve similar training accuracies). This implies that there is significant overheads for our multi-node experiment compared to our single-node experiment. Upon further research investigation, we noticed that the communication costs for our application is immense. As supported by this article <a href = "https://timdettmers.com/2014/10/09/deep-learning-data-parallelism/">here</a>, data parallelism does not yield a good result due to the amount of data that needs to be passed around the nodes. During each backward pass of our training phase, we need to broadcast all gradient values to all other GPUs. With <b>117 million parameters</b> to train in our smallest example of GPT-2, this represents a huge amount of communication overhead which mitigates the computational benefit that we got from scaling the number of processors. 
 
       Theoretically, there are optimizations that we could have pursued to reduce communication costs in our project. We could have reduced the parameters of the number of parameters with layers such as max pooling or using convolution layers. However, that will edit the fundamental structure of GPT-2 that is empirically tested by OpenAI. Moreover with the initial 117 million parameters to train, it is not feasible to decide on which layers to modify given the timeframe that we have. </p>
 
       <a class="anchor" id="8"></a>
       <div class="page-header">
-        <h2>8. Description of advanced features</h2>
+        <h2>8. Description of Advanced Features</h2>
       </div>
       <h4> Horovod + Ring all-reduce algorithm </h4>
       <p> The main advanced feature in our parallel programming model is our API/programming model usage of <b>Horovod and the Ring-All-Reduce</b> algorithm. This algorithm was not discussed in class but a solution which we found to have great potential in speeding-up parallel applications. Horovod is a distributed deep learning training framework for TensorFlow, Keras, PyTorch, and Apache MXNet. This framework is based on MPI4Py and developed/supported by <a href = "https://eng.uber.com/horovod/">Uber Engineering</a>. In class, we mostly explored Master-Worker models (all-reduce) that is commonly seen in the vanilla implementation of OpenMPI. However, there are advantages of Horovod and the Ring-All-Reduce algorithm over this vanilla implementation. As part of our exploration of this model, we also performed an asymptotic analysis of these two algorithms and found that the ring-all-reduce algorithm was superior in terms of preventing the network bandwidth bottleneck. This is outlined in the image below:
@@ -231,8 +281,8 @@
       <br/>
       Adopting this advanced feature was a challenging task for our team as there was less support and documentation available for us compared to vanilla solutions. This included less academic papers or tools accessible to us for this project. This became especially relevant during the scaling phase of our project, as we were aware that from internal benchmarking tools and peer-reviewed papers, Horovod’s communication overhead increases significantly as the number of nodes increases (especially with a model as large as ours).</p>
 
-      <h4> Assessing Textual Style transfer </h4>
-      <p>Another advanced feature that we explored was the possibility of incorporating quality metrics in our final project. Quality metrics will provide us with a structured methodology in accessing the effectiveness of our textural style transfer from a source to a target text. We explored different approaches to do this from academic papers such as one from the MIT media lab linked <a href="https://arxiv.org/pdf/1904.02295.pdf"> here</a>. This assessment will be based on 3 facets of evaluation, namely:
+      <h4> Assessing Textual Style Transfer </h4>
+      <p>Another advanced feature that we explored was the possibility of incorporating quality metrics in our final project. Quality metrics will provide us with a structured methodology in accessing the effectiveness of our textural style transfer from a source to a target text. We explored different approaches to do this from academic papers such as one from the MIT media lab linked <a href="https://arxiv.org/pdf/1904.02295.pdf"> here</a>. This assessment would have been based on 3 facets of evaluation, namely:
         <ol>
         <li>Style transfer intensity: How different are the texts?</li>
         <li>Content Preservation: How similar is the content?</li>
@@ -245,15 +295,15 @@
       <div class="page-header">
         <h2>9. Final discussion about goals achieved, improvements suggested, lessons learnt, future work, interesting insights</h2>
       </div>
-      <h4> Goals achieved</h4>
+      <h4> Goals Achieved</h4>
       <p> In our project, we have achieved most of the goals that we set out to achieve. We ran our parallel application for textual style transfer on both a single node as well as a multi-node system. We have also investigated how model's training scales with different number of nodes and processes. This led us to interesting findings about the disadvantages of Horovod in data-intensive applications. In this project, we have also shown the use of the novel parallel programming model of Horovod's Ring-all-reduce algorithm on an AWS EC2 cluster.</p>
 
 
       <h4> Lessons learnt/interesting insights/challenges with running Horovod on Harvard Cannon </h4>
-      <p> Our original plan was to use Harvard’s Cannon research computing cluster to run the training. We were able to implement the serialized training of the GPT2 language model on the Cannon cluster, but the Horovod parallelization was significantly more difficult. The team spent a considerable amount of time pursuing this option, but ultimately opted to utilize AWS compute resources. The error messages were slightly cryptic, and after we realized the segmentation fault on the AWS implementation was a simple Out-Of-Memory case that could be cured by boosting RAM, we attempted to boost the memory available to the job we were running on Cannon’s GPU partition. However, the issue persisted. Eventually, it appeared that the source of the segmentation fault lay in the specific versions of OpenMPI and GCC that we were installing via the modules ready for easy installation on the cluster. Horovod relies on GCC version 4.9 and either version 3.1.2 or version 4.0.0 of OpenMPI. Unfortunately, installing the correct OpenMPI module required an upgrade to a more recent version of GCC. Thus, the fault persisted. One potential path to deal with the situation would be to manually install the correct versions of GCC and OpenMPI from source into our home directory. We pursued this course in parallel with our implementation on AWS. Eventually, we were successful in the AWS implementation and found that the speedup produced allowed us to train the model in a reasonable amount of wall-clock time. Given this success in combination with ongoing obstacles in the manual installation of the correct OpenMPI and GCC versions (and the recognition that the bug perhaps would persist regardless of the new installation), we opted for the AWS path. Additionally, we noted that the time per training step for our serial training implementations on both Canon and AWS system were comparable, leading us to conclude that investing the additional hours to re-implement the parallelized Horovod training on the Canon cluster would not be necessary.</p>
+      <p> Our original plan was to use Harvard’s Cannon research computing cluster to run the training. We were able to implement the serialized training of the GPT2 language model on the Cannon cluster, but the Horovod parallelization was significantly more difficult. The team spent a considerable amount of time pursuing this option, but ultimately opted to utilize AWS compute resources. The error messages were slightly cryptic, and after we realized the segmentation fault on the AWS implementation was a simple Out-Of-Memory case that could be cured by boosting RAM, we attempted to boost the memory available to the job we were running on Cannon’s GPU partition. However, the issue persisted. Eventually, it appeared that the source of the segmentation fault lay in the specific versions of OpenMPI and GCC that we were installing via the modules ready for easy installation on the cluster. Horovod relies on GCC version 4.9 and either version 3.1.2 or version 4.0.0 of OpenMPI. Unfortunately, installing the correct OpenMPI module required an upgrade to a more recent version of GCC. Thus, the fault persisted. One potential path to deal with the situation would be to manually install the correct versions of GCC and OpenMPI from source into our home directory. We pursued this course in parallel with our implementation on AWS. Eventually, we were successful in the AWS implementation and found that the speedup produced allowed us to train the model in a reasonable amount of wall-clock time. Given this success in combination with ongoing obstacles in the manual installation of the correct OpenMPI and GCC versions (and the recognition that the bug perhaps would persist regardless of the new installation), we opted for the AWS path. Additionally, we noted that the time per training step for our serial training implementations on both Cannon and AWS system were comparable, leading us to conclude that investing the additional hours to re-implement the parallelized Horovod training on the Cannon cluster would not be necessary.</p>
 
       <h4> Future Work </h4>
-      <p> There are several areas of future work that we propose for our project. Given more time, we can use the larger GPT-2 models as well as experiment with the vanilla all-reduce algorithm on MPI. On an ambitious level, we can also modify the core GPT-2 model from OpenAI to be more suited for this task of textual style transfer. Lastly, we can also frame the textual style transfer problem more rigorously and use the metrics we originally proposed from the MIT Media Lab academic paper.</p>
+      <p> There are several areas of future work that we propose for our project. Given more time, we can use the larger GPT-2 models as well as experiment with the vanilla all-reduce algorithm on MPI. On an ambitious level, we can also modify the core GPT-2 model from OpenAI to be more suited for this task of textual style transfer. We would also like to look further into running the parallelized Horovod model training on Harvard’s Cannon cluster, which would save money and allow us to scale further. Lastly, we can also frame the textual style transfer problem more rigorously and use the metrics we originally proposed from the MIT Media Lab academic paper.</p>
 
       <a class="anchor" id="10"></a>
       <div class="page-header">
